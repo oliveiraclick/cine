@@ -753,14 +753,14 @@ const MovieDetails = () => {
            background-color: black;
            position: relative;
            border-radius: 8px;
-           overflow: hidden;
+           /* overflow: hidden; Removed to allow button outside */
         }
 
         .close-modal {
            position: absolute;
-           top: 10px;
-           right: 10px;
-           background-color: rgba(0,0,0,0.5);
+           top: -45px;
+           right: 0;
+           background-color: rgba(255, 255, 255, 0.2); /* Lighter bg for visibility on dark overlay */
            border-radius: 50%;
            width: 36px;
            height: 36px;
