@@ -29,3 +29,28 @@ export const toggleWatchlist = (movie) => {
     localStorage.setItem(WATCHLIST_KEY, JSON.stringify(list));
     return !exists; // Returns new state (true = added, false = removed)
 };
+
+const REVIEWS_KEY = 'cinesocial_reviews';
+
+export const getReviews = () => {
+    const data = localStorage.getItem(REVIEWS_KEY);
+    return data ? JSON.parse(data) : [];
+};
+
+export const addReview = (review) => {
+    const list = getReviews();
+    const newReview = {
+        ...review,
+        id: Date.now().toString(), // Simple ID generation
+        userId: 'current_user',
+        timestamp: new Date().toISOString()
+    };
+    list.unshift(newReview);
+    localStorage.setItem(REVIEWS_KEY, JSON.stringify(list));
+    return newReview;
+};
+
+export const getUserReviews = () => {
+    const list = getReviews();
+    return list.filter(r => r.userId === 'current_user');
+};

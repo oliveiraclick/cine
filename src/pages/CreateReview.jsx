@@ -1,4 +1,5 @@
 import { searchMovies } from '../services/tmdb';
+import { addReview } from '../services/storage';
 
 const CreateReview = () => {
    const navigate = useNavigate();
@@ -139,7 +140,21 @@ const CreateReview = () => {
 
                   <div className="modal-footer">
                      <button className="btn-cancel" onClick={() => navigate(-1)}>Cancelar</button>
-                     <button className="btn btn-primary" onClick={() => navigate('/feed')}>
+                     <button className="btn btn-primary" onClick={() => {
+                        if (!selectedMovie) return;
+                        addReview({
+                           movieId: selectedMovie.id,
+                           movieTitle: selectedMovie.title,
+                           moviePoster: selectedMovie.poster,
+                           movieYear: selectedMovie.year,
+                           rating: rating,
+                           text: text,
+                           spoilers: spoilers,
+                           likes: 0,
+                           comments: 0
+                        });
+                        navigate('/feed');
+                     }}>
                         Publicar <ChevronRight size={16} />
                      </button>
                   </div>

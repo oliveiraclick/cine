@@ -3,13 +3,14 @@ import { Settings, Share2, Crown, ChevronRight, Grid, Bookmark, ChevronLeft } fr
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 
-import { getWatchlist } from '../services/storage';
+import { getWatchlist, getUserReviews } from '../services/storage';
 
 const Profile = () => {
    const navigate = useNavigate();
 
    const [activeTab, setActiveTab] = useState('assistidos');
    const [watchlist, setWatchlist] = useState([]);
+   const [myReviews, setMyReviews] = useState([]);
 
    // Mock Watched (Keep for now as we don't have "Observed" logic yet)
    const watchedMovies = [
@@ -20,8 +21,9 @@ const Profile = () => {
    ];
 
    React.useEffect(() => {
-      // Load watchlist whenever rendering or switching tabs
+      // Load watchlist & reviews whenever rendering or switching tabs
       setWatchlist(getWatchlist());
+      setMyReviews(getUserReviews());
    }, [activeTab]);
 
    const currentGrid = activeTab === 'querover' ? watchlist : watchedMovies.map((url, i) => ({ id: i, poster_path: url.replace('https://image.tmdb.org/t/p/w200', ''), vote_average: 4.5 }));
@@ -58,7 +60,7 @@ const Profile = () => {
                   <span className="stat-label">Filmes</span>
                </div>
                <div className="stat-item">
-                  <span className="stat-num">85</span>
+                  <span className="stat-num">{myReviews.length}</span>
                   <span className="stat-label">Reviews</span>
                </div>
                <div className="stat-item" onClick={() => navigate('/achievements')} style={{ cursor: 'pointer' }}>
@@ -91,7 +93,10 @@ const Profile = () => {
             <div className={`tab ${activeTab === 'querover' ? 'active' : ''}`} onClick={() => setActiveTab('querover')}>
                <Bookmark size={14} style={{ marginRight: 6 }} /> Quero Ver
             </div>
-            <div className="tab-indicator" style={{ left: activeTab === 'assistidos' ? '0%' : '50%' }}></div>
+            <div className={`tab ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => setActiveTab('reviews')}>
+               <MessageSquare size={14} style={{ marginRight: 6 }} /> Reviews
+            </div>
+            <div className="tab-indicator" style={{ left: activeTab === 'assistidos' ? '0%' : activeTab === 'querover' ? '33%' : '66%', width: '33.3%' }}></div>
          </div>
 
          <div className="filter-chips-row">
@@ -102,17 +107,35 @@ const Profile = () => {
          </div>
 
          <div className="grid-content">
-            {currentGrid.length === 0 && (
-               <div style={{ gridColumn: '1 / -1', padding: 20, textAlign: 'center', color: '#666', fontSize: 13 }}>
-                  {activeTab === 'querover' ? 'Sua lista está vazia. Adicione filmes!' : 'Nenhum filme assistido.'}
+            {activeTab === 'reviews' ? (
+               <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {myReviews.length === 0 && <span style={{ padding: 20, textAlign: 'center', color: '#666' }}>Sem reviews ainda.</span>}
+                  {myReviews.map(r => (
+                     <div key={r.id} style={{ display: 'flex', gap: 10, padding: 10, backgroundColor: '#111', borderRadius: 8 }}>
+                        <img src={r.moviePoster} style={{ width: 50, height: 75, objectFit: 'cover', borderRadius: 4 }} />
+                        <div style={{ flex: 1 }}>
+                           <h4 style={{ fontSize: 14, fontWeight: 'bold' }}>{r.movieTitle}</h4>
+                           <span style={{ fontSize: 11, color: '#E50914' }}>★ {r.rating}</span>
+                           <p style={{ fontSize: 12, color: '#ccc', marginTop: 4 }}>{r.text}</p>
+                        </div>
+                     </div>
+                  ))}
                </div>
+            ) : (
+               <>
+                  {currentGrid.length === 0 && (
+                     <div style={{ gridColumn: '1 / -1', padding: 20, textAlign: 'center', color: '#666', fontSize: 13 }}>
+                        {activeTab === 'querover' ? 'Sua lista está vazia. Adicione filmes!' : 'Nenhum filme assistido.'}
+                     </div>
+                  )}
+                  {currentGrid.map((item, index) => (
+                     <div key={index} className="grid-item" onClick={() => item.id && navigate(`/movie/${item.id}`)}>
+                        <img src={item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : 'https://via.placeholder.com/200x300'} className="grid-poster" />
+                        <div className="grid-rating">★ {item.vote_average ? Number(item.vote_average).toFixed(1) : '0.0'}</div>
+                     </div>
+                  ))}
+               </>
             )}
-            {currentGrid.map((item, index) => (
-               <div key={index} className="grid-item" onClick={() => item.id && navigate(`/movie/${item.id}`)}>
-                  <img src={item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : 'https://via.placeholder.com/200x300'} className="grid-poster" />
-                  <div className="grid-rating">★ {item.vote_average ? Number(item.vote_average).toFixed(1) : '0.0'}</div>
-               </div>
-            ))}
          </div>
 
          <div style={{ height: 80 }}></div>

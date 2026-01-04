@@ -3,6 +3,7 @@ import { Search, Bell, Heart, MessageSquare, Bookmark, MoreHorizontal } from 'lu
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { getNowPlaying, getTrending } from '../services/tmdb';
+import { getReviews } from '../services/storage';
 
 const Feed = () => {
   const navigate = useNavigate();
@@ -59,8 +60,24 @@ const Feed = () => {
             };
           });
 
-        setFeedActivities(mappedFeed.slice(0, 3)); // First 3 for 'Following'
-        setGlobalActivities(mappedFeed.slice(3, 8)); // Next 5 for 'Global'
+        // Fetch Real User Reviews
+        const realReviewsData = getReviews();
+        const mappedReal = realReviewsData.map(r => ({
+          id: `real-${r.id}`,
+          user: { name: 'Você', avatar: 'https://i.pravatar.cc/150?u=99', time: 'Agora mesmo' }, // Placeholder user
+          content: {
+            title: r.movieTitle,
+            poster: r.moviePoster,
+            rating: r.rating.toString(), // Ensure string for consistency if needed, or keep number
+            text: r.text,
+            likes: r.likes,
+            comments: r.comments
+          },
+          isShow: false // Assuming mostly movies for now, or could store type
+        }));
+
+        setFeedActivities([...mappedReal, ...mappedFeed.slice(0, 3)]); // Real reviews first
+        setGlobalActivities([...mappedReal, ...mappedFeed.slice(3, 8)]); // Also show in global for now
       }
     };
 
