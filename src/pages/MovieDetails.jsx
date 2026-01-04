@@ -1,15 +1,56 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Share2, Play, Plus, Check, ChevronLeft, ThumbsUp, MessageSquare } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getMovieDetails } from '../services/tmdb';
 
 const MovieDetails = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const [movie, setMovie] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDetails = async () => {
+      if (!id) return;
+      setLoading(true);
+      const data = await getMovieDetails(id);
+      if (data) {
+        setMovie(data);
+      }
+      setLoading(false);
+    };
+
+    fetchDetails();
+  }, [id]);
+
+  if (loading) {
+    return <div style={{ height: '100vh', backgroundColor: '#101010', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>Carregando...</div>;
+  }
+
+  if (!movie) {
+    return <div style={{ height: '100vh', backgroundColor: '#101010', color: 'white' }}>Filme não encontrado</div>;
+  }
+
+  const backdropUrl = movie.backdrop_path
+    ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}`
+    : 'https://via.placeholder.com/800x450?text=No+Backdrop';
+
+  const posterUrl = movie.poster_path
+    ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
+    : 'https://via.placeholder.com/300x450?text=No+Poster';
+
+  const year = movie.release_date ? movie.release_date.substring(0, 4) : '';
+  const runtime = movie.runtime ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m` : '';
+  const genres = movie.genres ? movie.genres.slice(0, 3) : [];
+  const cast = movie.credits && movie.credits.cast ? movie.credits.cast.slice(0, 6) : [];
+  // Mock circle score for now as TMDB vote_average is different scale
+  const circleScore = (movie.vote_average).toFixed(1);
 
   return (
     <div className="details-container">
       {/* Header Backdrop */}
       <div className="backdrop-section">
-        <img src="https://image.tmdb.org/t/p/original/tmU7GeKVybMWFButWEGl2M4GeiP.jpg" alt="Backdrop" className="backdrop-image" />
+        <img src={backdropUrl} alt="Backdrop" className="backdrop-image" />
         <div className="backdrop-overlay"></div>
         <div className="top-bar">
           <button className="icon-btn" onClick={() => navigate(-1)}><ChevronLeft color="white" /></button>
@@ -19,20 +60,20 @@ const MovieDetails = () => {
 
       <div className="content-body">
         <div className="poster-row">
-          <img src="https://image.tmdb.org/t/p/w300/3bhkrj58Vtu7enYsRolD1fZdja1.jpg" alt="Poster" className="main-poster" />
+          <img src={posterUrl} alt={movie.title} className="main-poster" />
           <div className="header-info">
             <div className="tags">
-              <span className="tag">TOP 10</span>
-              <span className="tag">CRIME</span>
-              <span className="tag">DRAMA</span>
+              {genres.map(g => (
+                <span key={g.id} className="tag">{g.name.toUpperCase()}</span>
+              ))}
             </div>
-            <h1 className="movie-title">O Poderoso Chefão</h1>
-            <p className="movie-meta">1972 • 2h 55m • 16+</p>
+            <h1 className="movie-title">{movie.title}</h1>
+            <p className="movie-meta">{year} • {runtime}</p>
 
             <div className="circle-score-box">
               <div className="score-label">CÍRCULO DE AMIGOS</div>
               <div className="score-row">
-                <span className="big-score">9.8</span>
+                <span className="big-score">{circleScore}</span>
                 <span className="max-score">/10</span>
               </div>
               {/* Circle Chart Placeholder */}
@@ -58,6 +99,7 @@ const MovieDetails = () => {
         <div className="section">
           <h3>Onde Assistir</h3>
           <div className="streaming-row">
+            {/* Mock Streaming data, as TMDB watch providers api needs specific region/setup usually */}
             <div className="stream-option">
               <div className="stream-logo netflix">N</div>
               <div className="stream-info">
@@ -93,7 +135,7 @@ const MovieDetails = () => {
         <div className="section">
           <h3>Sinopse</h3>
           <p className="synopsis-text">
-            O patriarca idoso de uma dinastia do crime organizado transfere o controle de seu império clandestino para seu filho relutante. Uma saga épica de família, lealdade e traição que define o gênero de máfia para sempre. <span className="read-more">Ler mais</span>
+            {movie.overview || 'Sinopse não disponível.'}
           </p>
         </div>
 
@@ -103,22 +145,16 @@ const MovieDetails = () => {
             <span className="see-all">Ver todos</span>
           </div>
           <div className="cast-list">
-            <div className="cast-item">
-              <img src="https://image.tmdb.org/t/p/w200/fuTEPMsBtV1zE98ujPONbKiYDc2.jpg" className="cast-avatar" />
-              <span className="cast-name">M.Brando</span>
-            </div>
-            <div className="cast-item">
-              <img src="https://image.tmdb.org/t/p/w200/fMDFeVf0pjopTJbyRSLFadCN3aE.jpg" className="cast-avatar" />
-              <span className="cast-name">Al Pacino</span>
-            </div>
-            <div className="cast-item">
-              <img src="https://image.tmdb.org/t/p/w200/b7fTC9WFkgqGOv77mLQzmD24uaJ.jpg" className="cast-avatar" />
-              <span className="cast-name">James Caan</span>
-            </div>
-            <div className="cast-item">
-              <img src="https://image.tmdb.org/t/p/w200/d7S7c77K8I6P9S9N0d8C8O4J4Z.jpg" className="cast-avatar" />
-              <span className="cast-name">Diane K.</span>
-            </div>
+            {cast.map(actor => (
+              <div key={actor.id} className="cast-item">
+                <img
+                  src={actor.profile_path ? `https://image.tmdb.org/t/p/w200${actor.profile_path}` : 'https://i.pravatar.cc/150'}
+                  className="cast-avatar"
+                  alt={actor.name}
+                />
+                <span className="cast-name">{actor.name}</span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -128,6 +164,7 @@ const MovieDetails = () => {
             <button className="filter-btn">Filtrar</button>
           </div>
 
+          {/* MOCK REVIEWS FOR NOW */}
           <div className="review-card-featured">
             <div className="review-header">
               <div className="reviewer">
@@ -140,7 +177,7 @@ const MovieDetails = () => {
               <div className="reviewer-rating">★ 10</div>
             </div>
             <p className="review-body">
-              Uma obra-prima absoluta. A fotografia escura e sombria complementa perfeitamente a narrativa moralmente ambígua. Pacino está irreconhecível em sua transformação.
+              Uma obra-prima absoluta. A fotografia escura e sombria complementa perfeitamente a narrativa moralmente ambígua.
             </p>
             <div className="review-actions">
               <div className="action-left">
@@ -162,7 +199,7 @@ const MovieDetails = () => {
               <div className="reviewer-rating-small">★ 9.5</div>
             </div>
             <p className="review-body-short">
-              Clássico indispensável. Demorei para assistir mas valeu cada minuto das quase 3 horas.
+              Clássico indispensável. Demorei para assistir mas valeu cada minuto.
             </p>
             <div className="review-actions">
               <div className="action-left">

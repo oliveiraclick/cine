@@ -1,25 +1,41 @@
-import React, { useState } from 'react';
-import { X, Search, ChevronRight, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { searchMovies } from '../services/tmdb';
 
 const CreateReview = () => {
    const navigate = useNavigate();
    const [selectedMovie, setSelectedMovie] = useState(null);
    const [movieQuery, setMovieQuery] = useState('');
+   const [searchResults, setSearchResults] = useState([]);
    const [rating, setRating] = useState(4.0);
    const [text, setText] = useState('');
    const [spoilers, setSpoilers] = useState(false);
    const [searchFriend, setSearchFriend] = useState('');
 
-   const mockMovies = [
-      { id: 1, title: 'Dune: Part Two', year: '2024', genre: 'Sci-Fi', poster: 'https://image.tmdb.org/t/p/w200/5aUVLiQCgqKMt6J4sY2b1F.jpg' },
-      { id: 2, title: 'Oppenheimer', year: '2023', genre: 'Drama', poster: 'https://image.tmdb.org/t/p/w200/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg' },
-      { id: 3, title: 'The Bear', year: '2023', genre: 'Série', poster: 'https://image.tmdb.org/t/p/w200/x5o8cLZfEXMoZczkfO4qFq.jpg' },
-      { id: 4, title: 'Succession', year: '2023', genre: 'Série', poster: 'https://image.tmdb.org/t/p/w200/7bM251e6gQh4hT2k2g7e2.jpg' },
-      { id: 5, title: 'Barbie', year: '2023', genre: 'Comédia', poster: 'https://image.tmdb.org/t/p/w200/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg' },
-   ];
+   // Basic debounce for search
+   React.useEffect(() => {
+      const delayDebounceFn = setTimeout(async () => {
+         if (movieQuery.length > 2) {
+            const data = await searchMovies(movieQuery);
+            if (data && data.results) {
+               const formatted = data.results
+                  .filter(item => item.media_type === 'movie' || item.media_type === 'tv')
+                  .slice(0, 10) // Limit to 10 results
+                  .map(item => ({
+                     id: item.id,
+                     title: item.title || item.name,
+                     year: (item.release_date || item.first_air_date || '').substring(0, 4),
+                     genre: item.media_type === 'movie' ? 'Filme' : 'Série',
+                     poster: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : 'https://via.placeholder.com/200x300?text=No+Poster',
+                     original_overview: item.overview // Store for later usage
+                  }));
+               setSearchResults(formatted);
+            }
+         } else {
+            setSearchResults([]);
+         }
+      }, 500);
 
-   const filteredMovies = mockMovies.filter(m => m.title.toLowerCase().includes(movieQuery.toLowerCase()));
+      return () => clearTimeout(delayDebounceFn);
+   }, [movieQuery]);
 
    return (
       <div className="review-modal-overlay">
@@ -47,7 +63,7 @@ const CreateReview = () => {
                   </div>
 
                   <div className="results-list">
-                     {filteredMovies.map(movie => (
+                     {searchResults.map(movie => (
                         <div key={movie.id} className="movie-result-item" onClick={() => setSelectedMovie(movie)}>
                            <img src={movie.poster} className="result-img" />
                            <div className="result-details">
