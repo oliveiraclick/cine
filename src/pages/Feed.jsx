@@ -1,88 +1,73 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, Bell, Heart, MessageSquare, Bookmark, MoreHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
+import { getNowPlaying, getTrending } from '../services/tmdb';
 
 const Feed = () => {
   const navigate = useNavigate();
-  // Mock Data
-  const radarItems = [
-    { id: 1, title: 'Duna: Part Two', user: 'Joao', avatar: 'https://i.pravatar.cc/150?u=1', poster: 'https://image.tmdb.org/t/p/w200/5aUVLiQCgqKMt6J4sY2b1F.jpg', rating: 4.8 },
-    { id: 2, title: 'Poor Things', user: 'Maria', avatar: 'https://i.pravatar.cc/150?u=2', poster: 'https://image.tmdb.org/t/p/w200/kCGlIMHnOm8JPXq3rXM6c5wMxc.jpg', rating: 4.5 },
-    { id: 3, title: 'Oppenheimer', user: 'Pedro', avatar: 'https://i.pravatar.cc/150?u=3', poster: 'https://image.tmdb.org/t/p/w200/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg', rating: 5.0 },
-    { id: 4, title: 'Civil War', user: 'Ana', avatar: 'https://i.pravatar.cc/150?u=4', poster: 'https://image.tmdb.org/t/p/w200/sh7Rg8Er3tFcN9BpKIPOMvALgZd.jpg', rating: 4.2 },
+  const [feedType, setFeedType] = useState('following');
+  const [radarItems, setRadarItems] = useState([]);
+  const [feedActivities, setFeedActivities] = useState([]);
+  const [globalActivities, setGlobalActivities] = useState([]);
+
+  // Mock Users to simulate "Following" activity on real movies
+  const mockUsers = [
+    { name: 'Ana Silva', avatar: 'https://i.pravatar.cc/150?u=4', time: 'Há 2 horas' },
+    { name: 'Carlos M.', avatar: 'https://i.pravatar.cc/150?u=5', time: 'Ontem' },
+    { name: 'Maria', avatar: 'https://i.pravatar.cc/150?u=2', time: '5 dias atrás' },
+    { name: 'Pedro', avatar: 'https://i.pravatar.cc/150?u=3', time: 'Há 12 horas' },
+    { name: 'Julia Roberts', avatar: 'https://i.pravatar.cc/150?u=20', time: 'Há 10 min' },
   ];
 
-  const [feedType, setFeedType] = React.useState('following');
+  useEffect(() => {
+    const loadFeed = async () => {
+      // 1. Radar (Now Playing)
+      const nowPlaying = await getNowPlaying();
+      if (nowPlaying?.results) {
+        const mappedRadar = nowPlaying.results.slice(0, 5).map((m, i) => ({
+          id: m.id,
+          title: m.title,
+          poster: m.poster_path ? `https://image.tmdb.org/t/p/w200${m.poster_path}` : '',
+          rating: m.vote_average.toFixed(1),
+          user: mockUsers[i % mockUsers.length].name.split(' ')[0],
+          avatar: mockUsers[i % mockUsers.length].avatar
+        }));
+        setRadarItems(mappedRadar);
+      }
 
-  const activities = [
-    {
-      id: 1,
-      user: { name: 'Ana Silva', avatar: 'https://i.pravatar.cc/150?u=4', time: 'Há 2 horas' },
-      content: {
-        title: 'Oppenheimer',
-        poster: 'https://image.tmdb.org/t/p/w300/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
-        rating: 5.0,
-        text: 'Uma obra-prima visual. A atuação de Cillian Murphy é assombrosa e a tensão...',
-        likes: 34,
-        comments: 8,
-      }
-    },
-    {
-      id: 2,
-      user: { name: 'Carlos M.', avatar: 'https://i.pravatar.cc/150?u=5', time: 'Ontem' },
-      content: {
-        title: 'Succession (S4)',
-        poster: 'https://image.tmdb.org/t/p/w300/7bM251e6gQh4hT2k2g7e2.jpg', // Placeholder for show
-        rating: 4.8,
-        text: 'O final foi devastador, mas inevitável. Os diálogos continuam afiados como...',
-        likes: 156,
-        comments: 42,
-      },
-      isShow: true
-    },
-    {
-      id: 3,
-      user: { name: 'Maria', avatar: 'https://i.pravatar.cc/150?u=2', time: '5 dias atrás' },
-      content: {
-        title: 'The Bear',
-        poster: 'https://image.tmdb.org/t/p/w300/x5o8cLZfEXMoZczkfO4qFq.jpg', // Placeholder
-        rating: 5.0,
-        text: 'Estressante. Caótico. Brilhante.',
-        likes: 89,
-        comments: 12,
-      }
-    }
-  ];
+      // 2. Feed Activities (Using Random Trending/Popular)
+      const trending = await getTrending();
+      if (trending?.results) {
+        const mappedFeed = trending.results
+          .filter(m => m.media_type !== 'person') // Filter out people
+          .slice(0, 10)
+          .map((m, i) => {
+            const user = mockUsers[i % mockUsers.length];
+            return {
+              id: m.id,
+              user: user,
+              content: {
+                title: m.title || m.name,
+                poster: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : '',
+                rating: m.vote_average.toFixed(1),
+                text: m.overview ? (m.overview.length > 100 ? m.overview.substring(0, 100) + '...' : m.overview) : 'Sem descrição disponível.',
+                likes: Math.floor(Math.random() * 500) + 10,
+                comments: Math.floor(Math.random() * 50) + 2
+              },
+              isShow: m.media_type === 'tv'
+            };
+          });
 
-  const globalActivities = [
-    {
-      id: 101,
-      user: { name: 'Julia Roberts', avatar: 'https://i.pravatar.cc/150?u=20', time: 'Há 10 min' },
-      content: {
-        title: 'Barbie',
-        poster: 'https://image.tmdb.org/t/p/w300/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg',
-        rating: 4.0,
-        text: 'Divertido, colorido mas com uma mensagem profunda sobre existencialismo.',
-        likes: 1200,
-        comments: 340,
+        setFeedActivities(mappedFeed.slice(0, 3)); // First 3 for 'Following'
+        setGlobalActivities(mappedFeed.slice(3, 8)); // Next 5 for 'Global'
       }
-    },
-    {
-      id: 102,
-      user: { name: 'Paulo Kogos', avatar: 'https://i.pravatar.cc/150?u=33', time: 'Há 1 hora' },
-      content: {
-        title: 'Godzilla Minus One',
-        poster: 'https://image.tmdb.org/t/p/w300/hkxxMIGaiCTmrEArK7J9JnMurzu.jpg',
-        rating: 5.0,
-        text: 'Melhor filme de monstro dos últimos 20 anos. O drama humano é real.',
-        likes: 4500,
-        comments: 890,
-      }
-    }
-  ];
+    };
 
-  const currentActivities = feedType === 'following' ? activities : globalActivities;
+    loadFeed();
+  }, []);
+
+  const currentActivities = feedType === 'following' ? feedActivities : globalActivities;
 
   const StarRating = ({ rating }) => {
     return <div className="rating-badge">★ {rating}</div>
@@ -127,7 +112,7 @@ const Feed = () => {
 
           <div className="radar-carousel">
             {radarItems.map(item => (
-              <div key={item.id} className="radar-card" onClick={() => navigate('/movie/1')}>
+              <div key={item.id} className="radar-card" onClick={() => navigate(`/movie/${item.id}`)}>
                 <div className="poster-wrapper">
                   <img src={item.poster} alt={item.title} className="radar-poster" />
                   <div className="radar-rating">★ {item.rating}</div>
@@ -149,7 +134,7 @@ const Feed = () => {
 
           <div className="feed-list">
             {currentActivities.map(item => (
-              <div key={item.id} className="feed-card" onClick={() => navigate('/movie/1')}>
+              <div key={item.id} className="feed-card" onClick={() => navigate(`/movie/${item.id}`)}>
                 <div className="card-header">
                   <div className="user-info">
                     <img src={item.user.avatar} alt={item.user.name} className="user-avatar" />
