@@ -3,6 +3,7 @@ import adImage from '../assets/splash_ad.png';
 
 const SplashAd = ({ onFinish }) => {
   const [timeLeft, setTimeLeft] = useState(5);
+  const [canSkip, setCanSkip] = useState(false);
 
   useEffect(() => {
     if (timeLeft === 0) {
@@ -10,12 +11,17 @@ const SplashAd = ({ onFinish }) => {
       return;
     }
 
+    // Enable skip after 2 seconds (when time left is 3)
+    if (timeLeft <= 3 && !canSkip) {
+      setCanSkip(true);
+    }
+
     const timer = setInterval(() => {
       setTimeLeft((prev) => prev - 1);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, onFinish]);
+  }, [timeLeft, onFinish, canSkip]);
 
   return (
     <div style={{
@@ -35,27 +41,49 @@ const SplashAd = ({ onFinish }) => {
         position: 'absolute',
         top: '20px',
         right: '20px',
-        background: 'rgba(0,0,0,0.5)',
-        color: 'white',
-        padding: '10px 20px',
-        borderRadius: '20px',
-        fontSize: '14px',
-        fontWeight: 'bold',
+        display: 'flex',
+        gap: '10px',
         zIndex: 10000
       }}>
-        Fechando em {timeLeft}s
+        {canSkip && (
+          <button
+            onClick={onFinish}
+            style={{
+              background: 'white',
+              color: 'black',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '20px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            Pular Anúncio
+          </button>
+        )}
+        <div style={{
+          background: 'rgba(0,0,0,0.5)',
+          color: 'white',
+          padding: '10px 20px',
+          borderRadius: '20px',
+          fontSize: '14px',
+          fontWeight: 'bold',
+        }}>
+          {timeLeft}s
+        </div>
       </div>
-      
-      <img 
-        src={adImage} 
-        alt="Advertisement" 
+
+      <img
+        src={adImage}
+        alt="Advertisement"
         style={{
           width: '100%',
           height: '100%',
           objectFit: 'cover'
         }}
       />
-      
+
       <div style={{
         position: 'absolute',
         bottom: '40px',
