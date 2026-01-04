@@ -87,7 +87,7 @@ const Feed = () => {
         </div>
       </header>
 
-      {/* Feed Tabs OLD STYLE REMOVED, NEW STYLE */}
+      {/* Feed Tabs */}
       <div className="feed-filter-bar">
         <div className={`filter-opt ${feedType === 'following' ? 'active' : ''}`} onClick={() => setFeedType('following')}>
           Seguindo
@@ -98,86 +98,111 @@ const Feed = () => {
           Global
           {feedType === 'global' && <div className="active-dot"></div>}
         </div>
+        <div className="divider-v"></div>
+        <div className={`filter-opt ${feedType === 'cinema' ? 'active' : ''}`} onClick={() => setFeedType('cinema')}>
+          No Cinema
+          {feedType === 'cinema' && <div className="active-dot"></div>}
+        </div>
       </div>
 
       {/* Main Content Scrollable */}
       <main className="feed-content">
 
-        {/* Radar Section */}
-        <section className="radar-section">
-          <div className="section-header">
-            <h3>Radar do Círculo</h3>
-            <span className="see-all">Ver todos</span>
-          </div>
+        {/* Only show Radar/Highlights on Social Tabs, hide on Cinema tab to focus on grid */}
+        {feedType !== 'cinema' && (
+          <section className="radar-section">
+            <div className="section-header">
+              <h3>Radar do Círculo</h3>
+              <span className="see-all">Ver todos</span>
+            </div>
 
-          <div className="radar-carousel">
-            {radarItems.map(item => (
-              <div key={item.id} className="radar-card" onClick={() => navigate(`/movie/${item.id}`)}>
-                <div className="poster-wrapper">
-                  <img src={item.poster} alt={item.title} className="radar-poster" />
-                  <div className="radar-rating">★ {item.rating}</div>
+            <div className="radar-carousel">
+              {radarItems.map(item => (
+                <div key={item.id} className="radar-card" onClick={() => navigate(`/movie/${item.id}`)}>
+                  <div className="poster-wrapper">
+                    <img src={item.poster} alt={item.title} className="radar-poster" />
+                    <div className="radar-rating">★ {item.rating}</div>
+                  </div>
+                  <div className="radar-user">
+                    <img src={item.avatar} alt={item.user} className="user-avatar-mini" />
+                    <span>{item.user} viu</span>
+                  </div>
                 </div>
-                <div className="radar-user">
-                  <img src={item.avatar} alt={item.user} className="user-avatar-mini" />
-                  <span>{item.user} assistiu</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
 
-        {/* Activities Feed */}
+        {/* Activities Feed OR Cinema Grid */}
         <section className="activities-section">
           <h3 className="section-title">
-            {feedType === 'following' ? 'Atividades do Círculo' : 'Explorar Global'}
+            {feedType === 'following' ? 'Atividades do Círculo' :
+              feedType === 'global' ? 'Explorar Global' :
+                'Em Cartaz nos Cinemas'}
           </h3>
 
-          <div className="feed-list">
-            {currentActivities.map(item => (
-              <div key={item.id} className="feed-card" onClick={() => navigate(`/movie/${item.id}`)}>
-                <div className="card-header">
-                  <div className="user-info">
-                    <img src={item.user.avatar} alt={item.user.name} className="user-avatar" />
-                    <div className="user-meta">
-                      <span className="user-name">{item.user.name}</span>
-                      <span className="post-time">{item.user.time}</span>
-                    </div>
+          {feedType === 'cinema' ? (
+            /* CINEMA GRID VIEW */
+            <div className="cinema-grid">
+              {radarItems.map(movie => ( // Using radarItems which contains NowPlaying data
+                <div key={movie.id} className="cinema-poster-card" onClick={() => navigate(`/movie/${movie.id}`)}>
+                  <img src={movie.poster} className="grid-poster" />
+                  <div className="grid-info">
+                    <span className="grid-title">{movie.title}</span>
+                    <span className="grid-rating">★ {movie.rating}</span>
                   </div>
-                  <MoreHorizontal size={20} color="#666" />
                 </div>
+              ))}
+            </div>
+          ) : (
+            /* SOCIAL FEED LIST */
+            <div className="feed-list">
+              {currentActivities.map(item => (
+                <div key={item.id} className="feed-card" onClick={() => navigate(`/movie/${item.id}`)}>
+                  <div className="card-header">
+                    <div className="user-info">
+                      <img src={item.user.avatar} alt={item.user.name} className="user-avatar" />
+                      <div className="user-meta">
+                        <span className="user-name">{item.user.name}</span>
+                        <span className="post-time">{item.user.time}</span>
+                      </div>
+                    </div>
+                    <MoreHorizontal size={20} color="#666" />
+                  </div>
 
-                <div className="card-content">
-                  <div className="content-poster-wrapper">
-                    <img src={item.content.poster} alt={item.content.title} className="content-poster" />
-                  </div>
-                  <div className="content-details">
-                    <h4 className="content-title">{item.content.title}</h4>
-                    <div className="stars-row">
-                      {[...Array(5)].map((_, i) => (
-                        <span key={i} style={{ color: i < Math.floor(item.content.rating) ? '#E50914' : '#444' }}>★</span>
-                      ))}
-                      <span className="rating-number">{item.content.rating}</span>
+                  <div className="card-content">
+                    <div className="content-poster-wrapper">
+                      <img src={item.content.poster} alt={item.content.title} className="content-poster" />
                     </div>
-                    <p className="review-text">{item.content.text}</p>
+                    <div className="content-details">
+                      <h4 className="content-title">{item.content.title}</h4>
+                      <div className="stars-row">
+                        {[...Array(5)].map((_, i) => (
+                          <span key={i} style={{ color: i < Math.floor(item.content.rating) ? '#E50914' : '#444' }}>★</span>
+                        ))}
+                        <span className="rating-number">{item.content.rating}</span>
+                      </div>
+                      <p className="review-text">{item.content.text}</p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="card-footer">
-                  <div className="interaction-left">
-                    <div className="interaction-item">
-                      <Heart size={18} color="#fff" fill={item.content.likes > 100 ? '#E50914' : 'none'} stroke={item.content.likes > 100 ? 'none' : '#fff'} />
-                      <span>{item.content.likes}</span>
+                  <div className="card-footer">
+                    <div className="interaction-left">
+                      <div className="interaction-item">
+                        <Heart size={18} color="#fff" fill={item.content.likes > 100 ? '#E50914' : 'none'} stroke={item.content.likes > 100 ? 'none' : '#fff'} />
+                        <span>{item.content.likes}</span>
+                      </div>
+                      <div className="interaction-item">
+                        <MessageSquare size={18} />
+                        <span>{item.content.comments}</span>
+                      </div>
                     </div>
-                    <div className="interaction-item">
-                      <MessageSquare size={18} />
-                      <span>{item.content.comments}</span>
-                    </div>
+                    <Bookmark size={18} className="bookmark-icon" />
                   </div>
-                  <Bookmark size={18} className="bookmark-icon" />
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Spacer for bottom nav */}
@@ -483,9 +508,45 @@ const Feed = () => {
             height: 16px;
             background-color: #333;
         }
-      `}</style>
-    </div>
-  );
-};
+
+        .cinema-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding-bottom: 20px;
+        }
+
+        .cinema-poster-card {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .grid-poster {
+            width: 100%;
+            aspect-ratio: 2/3;
+            border-radius: 8px;
+            object-fit: cover;
+            background-color: #222;
+        }
+
+        .grid-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .grid-title {
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .grid-rating {
+            font-size: 10px;
+            color: var(--color-warning);
+        }
 
 export default Feed;
