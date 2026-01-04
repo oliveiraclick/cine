@@ -2,116 +2,145 @@ import React, { useState } from 'react';
 import { Search as SearchIcon, X, ChevronRight, PlayCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
+import { searchMovies } from '../services/tmdb';
 
 const Search = () => {
-    const navigate = useNavigate();
-    const [query, setQuery] = useState('Opp');
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState(null); // specific structure: { best: ..., others: ... }
 
-    const results = {
-        best: {
-            title: 'Oppenheimer',
-            year: '2023',
-            director: 'Christopher Nolan',
-            type: 'Filme',
-            poster: 'https://image.tmdb.org/t/p/w200/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg'
-        },
-        others: [
-            { id: 1, title: 'Operation Finale', year: '2018', type: 'Filme', poster: 'https://image.tmdb.org/t/p/w200/p40x3QvN4hWz2bS6v6F4QGx0x.jpg' } // Placeholder logic
-        ],
-        trending: [
-            { id: 1, title: 'Succession', year: '2018', type: 'Série', network: 'HBO', poster: 'https://image.tmdb.org/t/p/w200/7bM251e6gQh4hT2k2g7e2.jpg', tag: 'TOP 1' },
-            { id: 2, title: 'Parasite', year: '2019', type: 'Filme', director: 'Bong Joon-ho', poster: 'https://image.tmdb.org/t/p/w200/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg' }
-        ]
-    };
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+    setLoading(true);
+    const data = await searchMovies(query);
+    setLoading(false);
 
-    return (
-        <div className="search-container">
-            {/* Search Header */}
-            <div className="search-header">
-                <div className="search-bar">
-                    <SearchIcon size={18} color="#888" className="search-icon" />
-                    <input
-                        type="text"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        className="search-input"
-                        autoFocus
-                    />
-                    {query && <X size={16} color="#888" className="clear-icon" onClick={() => setQuery('')} />}
+    if (data && data.results) {
+      // Filter only movies and series for now
+      const filtered = data.results.filter(i => i.media_type === 'movie' || i.media_type === 'tv');
+
+      if (filtered.length > 0) {
+        setResults({
+          best: filtered[0],
+          others: filtered.slice(1)
+        });
+      } else {
+        setResults({ best: null, others: [] });
+      }
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  return (
+    <div className="search-container">
+      {/* Search Header */}
+      <div className="search-header">
+        <div className="search-bar">
+          <button className="search-btn-icon" onClick={handleSearch}>
+            <SearchIcon size={18} color="#888" />
+          </button>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="search-input"
+            placeholder="Buscar filmes, séries..."
+            autoFocus
+          />
+          {query && <X size={16} color="#888" className="clear-icon" onClick={() => setQuery('')} />}
+        </div>
+        <button className="cancel-btn" onClick={() => navigate('/feed')}>Cancelar</button>
+      </div>
+
+      {/* Filters (Chips) */}
+      <div className="filter-chips">
+        <div className="chip active">Todos</div>
+        <div className="chip">Filmes</div>
+        <div className="chip">Séries</div>
+        <div className="chip">Pessoas</div>
+      </div>
+
+      <div className="search-content">
+        {loading && <div style={{ textAlign: 'center', color: '#666', marginTop: 40 }}>Buscando...</div>}
+
+        {!loading && results && results.best && (
+          <>
+            {/* Best Result */}
+            <section className="result-section">
+              <h3 className="section-label">MELHOR RESULTADO</h3>
+              <div className="best-result-card" onClick={() => navigate(`/movie/${results.best.id}`)}>
+                <img
+                  src={results.best.poster_path ? `https://image.tmdb.org/t/p/w200${results.best.poster_path}` : 'https://via.placeholder.com/100x150'}
+                  alt={results.best.title || results.best.name}
+                  className="result-poster"
+                />
+                <div className="result-info">
+                  <h4 className="result-title">{results.best.title || results.best.name}</h4>
+                  <p className="result-meta">
+                    {results.best.media_type === 'movie' ? 'Filme' : 'Série'} •
+                    {results.best.release_date ? results.best.release_date.substring(0, 4) : results.best.first_air_date ? results.best.first_air_date.substring(0, 4) : 'N/A'}
+                  </p>
                 </div>
-                <button className="cancel-btn" onClick={() => navigate('/feed')}>Cancelar</button>
-            </div>
+                <ChevronRight size={20} color="#666" />
+              </div>
+            </section>
 
-            {/* Filters (Chips) */}
-            <div className="filter-chips">
-                <div className="chip active">Todos</div>
-                <div className="chip">Filmes</div>
-                <div className="chip">Séries</div>
-                <div className="chip">Pessoas</div>
-            </div>
-
-            <div className="search-content">
-                {/* Best Result */}
-                <section className="result-section">
-                    <h3 className="section-label">MELHOR RESULTADO</h3>
-                    <div className="best-result-card" onClick={() => navigate('/movie/oppenheimer')}>
-                        <img src={results.best.poster} alt={results.best.title} className="result-poster" />
-                        <div className="result-info">
-                            <h4 className="result-title">{results.best.title}</h4>
-                            <p className="result-meta">{results.best.type} • {results.best.year} • {results.best.director}</p>
-                        </div>
-                        <ChevronRight size={20} color="#666" />
+            {/* Other Results */}
+            <section className="result-section">
+              <h3 className="section-label">OUTROS RESULTADOS</h3>
+              {results.others.map(item => (
+                <div key={item.id} className="list-item" onClick={() => navigate(`/movie/${item.id}`)}>
+                  <div className="item-left">
+                    <div className="mini-poster-placeholder">
+                      <img
+                        src={item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : 'https://via.placeholder.com/80x120'}
+                        alt=""
+                        className="mini-poster"
+                        onError={(e) => e.target.style.display = 'none'}
+                      />
                     </div>
-                </section>
+                    <div className="item-info">
+                      <h4 className="item-title">{item.title || item.name}</h4>
+                      <p className="item-meta">
+                        {item.media_type === 'movie' ? 'Filme' : 'Série'} •
+                        {item.release_date ? item.release_date.substring(0, 4) : item.first_air_date ? item.first_air_date.substring(0, 4) : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight size={20} color="#444" />
+                </div>
+              ))}
+            </section>
+          </>
+        )}
 
-                {/* Other Results */}
-                <section className="result-section">
-                    <h3 className="section-label">OUTROS RESULTADOS</h3>
-                    {results.others.map(item => (
-                        <div key={item.id} className="list-item">
-                            <div className="item-left">
-                                <div className="mini-poster-placeholder">
-                                    {/* Using div instead of img for placeholder if needed, but img is better */}
-                                    <img src={item.poster} alt="" className="mini-poster" onError={(e) => e.target.style.display = 'none'} />
-                                </div>
-                                <div className="item-info">
-                                    <h4 className="item-title">{item.title}</h4>
-                                    <p className="item-meta">{item.type} • {item.year}</p>
-                                </div>
-                            </div>
-                            <PlayCircle size={20} color="#444" />
-                        </div>
-                    ))}
-                </section>
+        {/* Empty State / Initial State */}
+        {!loading && !results && (
+          <div style={{ textAlign: 'center', color: '#444', marginTop: 40 }}>
+            <p style={{ fontSize: 12 }}>Digite para buscar...</p>
+          </div>
+        )}
 
-                {/* Trending */}
-                <section className="result-section">
-                    <h3 className="section-label">EM ALTA NA SUA REDE</h3>
-                    {results.trending.map(item => (
-                        <div key={item.id} className="list-item">
-                            <div className="item-left">
-                                <img src={item.poster} alt="" className="mini-poster" />
-                                <div className="item-info">
-                                    <div className="title-row">
-                                        <h4 className="item-title">{item.title}</h4>
-                                        {item.tag && <span className="tag">{item.tag}</span>}
-                                    </div>
-                                    <p className="item-meta">{item.type} • {item.year} • {item.network || item.director}</p>
-                                </div>
-                            </div>
-                            <ChevronRight size={20} color="#666" />
-                        </div>
-                    ))}
-                </section>
-            </div>
+        {/* No Results */}
+        {!loading && results && !results.best && (
+          <div style={{ textAlign: 'center', color: '#666', marginTop: 40 }}>
+            Nenhum resultado encontrado.
+          </div>
+        )}
+      </div>
 
-            <div style={{ height: 60 }}></div> {/* Spacer */}
+      <div style={{ height: 60 }}></div> {/* Spacer */}
 
-            {/* Visual Keyboard Placeholder (Optional, just an image or div) - Skipping to keep it functional, user can use real keyboard */}
+      <BottomNav />
 
-            <BottomNav />
-
-            <style>{`
+      <style>{`
         .search-container {
           min-height: 100vh;
           background-color: var(--color-background);
@@ -137,6 +166,15 @@ const Search = () => {
           padding: 0 var(--spacing-3);
           position: relative;
         }
+        
+        .search-btn-icon {
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 0;
+        }
 
         .search-input {
           background: transparent;
@@ -150,11 +188,18 @@ const Search = () => {
         .search-input:focus {
           outline: none;
         }
+        
+        .clear-icon {
+            cursor: pointer;
+        }
 
         .cancel-btn {
+          background: none;
+          border: none;
           color: var(--color-error);
           font-size: 14px;
           font-weight: 500;
+          cursor: pointer;
         }
 
         .filter-chips {
@@ -267,24 +312,9 @@ const Search = () => {
           font-size: 12px;
           color: #666;
         }
-
-        .title-row {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .tag {
-          background-color: var(--color-error);
-          color: white;
-          font-size: 8px;
-          padding: 1px 4px;
-          border-radius: 2px;
-          font-weight: 700;
-        }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 };
 
 export default Search;
