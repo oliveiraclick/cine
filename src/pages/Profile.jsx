@@ -3,25 +3,32 @@ import { Settings, Share2, Crown, ChevronRight, Grid, Bookmark, ChevronLeft } fr
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 
+import { getWatchlist } from '../services/storage';
+
 const Profile = () => {
    const navigate = useNavigate();
 
    const [activeTab, setActiveTab] = useState('assistidos');
+   const [watchlist, setWatchlist] = useState([]);
 
+   // Mock Watched (Keep for now as we don't have "Observed" logic yet)
    const watchedMovies = [
       'https://image.tmdb.org/t/p/w200/5aUVLiQCgqKMt6J4sY2b1F.jpg',
       'https://image.tmdb.org/t/p/w200/kCGlIMHnOm8JPXq3rXM6c5wMxc.jpg',
       'https://image.tmdb.org/t/p/w200/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
-      'https://image.tmdb.org/t/p/w200/sh7Rg8Er3tFcN9BpKIPOMvALgZd.jpg',
-      'https://image.tmdb.org/t/p/w200/3bhkrj58Vtu7enYsRolD1fZdja1.jpg',
-      'https://image.tmdb.org/t/p/w200/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
-      'https://image.tmdb.org/t/p/w200/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg',
-      'https://image.tmdb.org/t/p/w200/9PqD3wSIjantyprC52Bt2yAbAXD.jpg',
-      'https://image.tmdb.org/t/p/w200/fiVW06jE7z9YnO4trhaMEdclSiC.jpg'
+      'https://image.tmdb.org/t/p/w200/sh7Rg8Er3tFcN9BpKIPOMvALgZd.jpg'
    ];
+
+   React.useEffect(() => {
+      // Load watchlist whenever rendering or switching tabs
+      setWatchlist(getWatchlist());
+   }, [activeTab]);
+
+   const currentGrid = activeTab === 'querover' ? watchlist : watchedMovies.map((url, i) => ({ id: i, poster_path: url.replace('https://image.tmdb.org/t/p/w200', ''), vote_average: 4.5 }));
 
    return (
       <div className="profile-container">
+         {/* ... Header & Info (Unchanged except minor prop updates if needed) ... */}
          <div className="profile-header">
             <button className="icon-btn-simple" onClick={() => navigate(-1)}><ChevronLeft size={20} color="white" /></button>
             <span className="username">@mari_cina</span>
@@ -29,6 +36,7 @@ const Profile = () => {
          </div>
 
          <div className="profile-info">
+            {/* ... (Keep existing profile info mock) ... */}
             <div className="avatar-wrapper">
                <img src="https://i.pravatar.cc/150?u=9" className="big-avatar" />
                <div className="status-dot"></div>
@@ -94,10 +102,15 @@ const Profile = () => {
          </div>
 
          <div className="grid-content">
-            {watchedMovies.map((poster, index) => (
-               <div key={index} className="grid-item">
-                  <img src={poster} className="grid-poster" />
-                  <div className="grid-rating">★ {((Math.random() * 2) + 3).toFixed(1)}</div>
+            {currentGrid.length === 0 && (
+               <div style={{ gridColumn: '1 / -1', padding: 20, textAlign: 'center', color: '#666', fontSize: 13 }}>
+                  {activeTab === 'querover' ? 'Sua lista está vazia. Adicione filmes!' : 'Nenhum filme assistido.'}
+               </div>
+            )}
+            {currentGrid.map((item, index) => (
+               <div key={index} className="grid-item" onClick={() => item.id && navigate(`/movie/${item.id}`)}>
+                  <img src={item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : 'https://via.placeholder.com/200x300'} className="grid-poster" />
+                  <div className="grid-rating">★ {item.vote_average ? Number(item.vote_average).toFixed(1) : '0.0'}</div>
                </div>
             ))}
          </div>
