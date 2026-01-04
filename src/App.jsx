@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import SplashAd from './components/SplashAd';
 import Welcome from './pages/Welcome';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -18,6 +20,12 @@ import SettingsPage from './pages/Settings';
 import Achievements from './pages/Achievements';
 
 function App() {
+  const [showAd, setShowAd] = useState(true);
+
+  if (showAd) {
+    return <SplashAd onFinish={() => setShowAd(false)} />;
+  }
+
   return (
     <Router>
       <Routes>
