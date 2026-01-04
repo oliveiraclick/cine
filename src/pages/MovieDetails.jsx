@@ -2,12 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Share2, Play, Plus, Check, ChevronLeft, ThumbsUp, MessageSquare } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getMovieDetails } from '../services/tmdb';
+import { isInWatchlist, toggleWatchlist } from '../services/storage';
+import { X } from 'lucide-react';
 
 const MovieDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [inWatchlist, setInWatchlist] = useState(false);
+  const [showTrailer, setShowTrailer] = useState(false);
+  const [trailerKey, setTrailerKey] = useState(null);
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -16,12 +21,39 @@ const MovieDetails = () => {
       const data = await getMovieDetails(id);
       if (data) {
         setMovie(data);
+        setInWatchlist(isInWatchlist(data.id));
+
+        if (data.videos && data.videos.results) {
+          const trailer = data.videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+          if (trailer) setTrailerKey(trailer.key);
+        }
       }
       setLoading(false);
     };
 
     fetchDetails();
   }, [id]);
+
+  const handleToggleWatchlist = () => {
+    if (!movie) return;
+    const newState = toggleWatchlist(movie);
+    setInWatchlist(newState);
+  };
+
+  const handleWatchTrailer = () => {
+    if (trailerKey) {
+      setShowTrailer(true);
+    } else {
+      // Fallback if no specific trailer found in API, try searching or just alert
+      const fallback = movie?.videos?.results?.[0]?.key;
+      if (fallback) {
+        setTrailerKey(fallback);
+        setShowTrailer(true);
+      } else {
+        window.open(`https://www.youtube.com/results?search_query=${movie.title}+trailer`, '_blank');
+      }
+    }
+  };
 
   if (loading) {
     return <div style={{ height: '100vh', backgroundColor: '#101010', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>Carregando...</div>;
@@ -46,22 +78,28 @@ const MovieDetails = () => {
   // Mock circle score for now as TMDB vote_average is different scale
   const circleScore = (movie.vote_average).toFixed(1);
 
-  const handleWatchTrailer = () => {
-    if (movie.videos && movie.videos.results) {
-      const trailer = movie.videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
-      if (trailer) {
-        window.open(`https://www.youtube.com/watch?v=${trailer.key}`, '_blank');
-      } else {
-        // Fallback to searching on YouTube
-        window.open(`https://www.youtube.com/results?search_query=${movie.title}+trailer`, '_blank');
-      }
-    } else {
-      window.open(`https://www.youtube.com/results?search_query=${movie.title}+trailer`, '_blank');
-    }
-  };
-
   return (
     <div className="details-container">
+      {/* Trailer Modal */}
+      {showTrailer && (
+        <div className="trailer-modal">
+          <div className="modal-content">
+            <button className="close-modal" onClick={() => setShowTrailer(false)}>
+              <X size={24} color="white" />
+            </button>
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </div>
+      )}
+
       {/* Header Backdrop */}
       <div className="backdrop-section">
         <img src={backdropUrl} alt="Backdrop" className="backdrop-image" />
@@ -102,8 +140,13 @@ const MovieDetails = () => {
           <button className="btn btn-white btn-play" onClick={handleWatchTrailer}>
             <Play size={18} fill="black" /> Ver Trailer
           </button>
-          <button className="btn btn-dark-outline">
-            <Plus size={18} /> Quero Ver
+          <button
+            className="btn btn-dark-outline"
+            onClick={handleToggleWatchlist}
+            style={{ backgroundColor: inWatchlist ? '#333' : '#1a1a1a', borderColor: inWatchlist ? '#E50914' : '#444' }}
+          >
+            {inWatchlist ? <Check size={18} color="#E50914" /> : <Plus size={18} />}
+            {inWatchlist ? 'Na Lista' : 'Quero Ver'}
           </button>
           <button className="btn btn-circle-green">
             <Check size={20} />
@@ -689,6 +732,37 @@ const MovieDetails = () => {
            font-size: 12px;
            color: #888;
            text-decoration: underline;
+        }
+
+        .trailer-modal {
+           position: fixed;
+           top: 0; left: 0;
+           width: 100%; height: 100%;
+           background-color: rgba(0,0,0,0.9);
+           z-index: 9999;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           padding: 20px;
+        }
+
+        .modal-content {
+           width: 100%;
+           max-width: 800px;
+           aspect-ratio: 16/9;
+           background-color: black;
+           position: relative;
+           border-radius: 8px;
+           overflow: hidden;
+        }
+
+        .close-modal {
+           position: absolute;
+           top: -40px;
+           right: 0;
+           background: none;
+           border: none;
+           cursor: pointer;
         }
       `}</style>
     </div>
