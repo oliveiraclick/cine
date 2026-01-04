@@ -548,5 +548,9 @@ const Feed = () => {
             font-size: 10px;
             color: var(--color-warning);
         }
+      `}</style>
+    </div>
+  );
+};
 
 export default Feed;
