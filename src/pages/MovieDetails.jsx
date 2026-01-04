@@ -758,11 +758,18 @@ const MovieDetails = () => {
 
         .close-modal {
            position: absolute;
-           top: -40px;
-           right: 0;
-           background: none;
+           top: 10px;
+           right: 10px;
+           background-color: rgba(0,0,0,0.5);
+           border-radius: 50%;
+           width: 36px;
+           height: 36px;
+           display: flex;
+           align-items: center;
+           justify-content: center;
            border: none;
            cursor: pointer;
+           z-index: 10;
         }
       `}</style>
     </div>
