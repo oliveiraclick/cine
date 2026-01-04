@@ -9,6 +9,7 @@ import Search from './pages/Search';
 import MovieDetails from './pages/MovieDetails';
 import CreateReview from './pages/CreateReview';
 import Profile from './pages/Profile';
+import Admin from './pages/Admin';
 import Notifications from './pages/Notifications';
 import Indications from './pages/Indications';
 import InviteTree from './pages/InviteTree';
@@ -39,6 +40,7 @@ function App() {
         <Route path="/create-review" element={<CreateReview />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/notifications" element={<Notifications />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="/indications" element={<Indications />} />
         <Route path="/watchlist" element={<Profile />} />
         <Route path="/tree" element={<InviteTree />} />

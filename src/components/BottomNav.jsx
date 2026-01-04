@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Compass, Plus, Bookmark, User } from 'lucide-react';
+import { Home, Search, PlusSquare, Heart, User, Bookmark, Lock } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const BottomNav = () => {
@@ -16,13 +16,13 @@ const BottomNav = () => {
       </div>
 
       <div className="nav-item" onClick={() => navigate('/search')}>
-        <Compass size={24} color={isActive('/search') ? 'var(--color-primary)' : '#888'} />
+        <Search size={24} color={isActive('/search') ? 'var(--color-primary)' : '#888'} />
         <span className={`nav-label ${isActive('/search') ? 'active' : ''}`}>Explorar</span>
       </div>
 
       <div className="nav-item add-btn-wrapper" onClick={() => navigate('/create-review')}>
         <div className="add-btn">
-          <Plus size={24} color="white" />
+          <PlusSquare size={24} color="white" />
         </div>
       </div>
 
@@ -34,6 +34,11 @@ const BottomNav = () => {
       <div className="nav-item" onClick={() => navigate('/profile')}>
         <User size={24} color={isActive('/profile') ? 'var(--color-primary)' : '#888'} />
         <span className={`nav-label ${isActive('/profile') ? 'active' : ''}`}>Perfil</span>
+      </div>
+
+      {/* Secret Admin Access */}
+      <div className="nav-item secret-admin" onClick={() => navigate('/admin')}>
+        <Lock size={12} color="#333" />
       </div>
 
       <style>{`

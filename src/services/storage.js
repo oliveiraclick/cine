@@ -54,3 +54,42 @@ export const getUserReviews = () => {
     const list = getReviews();
     return list.filter(r => r.userId === 'current_user');
 };
+
+const ADS_KEY = 'cinesocial_ads';
+
+export const getAds = () => {
+    const data = localStorage.getItem(ADS_KEY);
+    // Return default ad if empty/null, ensures there's always something initially
+    // Or return empty array and handle logic elsewhere. Let's return empty array.
+    return data ? JSON.parse(data) : [];
+};
+
+export const addAd = (url, link) => {
+    const list = getAds();
+    const newAd = {
+        id: Date.now().toString(),
+        imageUrl: url,
+        link: link || '#',
+        views: 0,
+        active: true,
+        createdAt: new Date().toISOString()
+    };
+    list.unshift(newAd);
+    localStorage.setItem(ADS_KEY, JSON.stringify(list));
+    return newAd;
+};
+
+export const incrementAdView = (adId) => {
+    const list = getAds();
+    const index = list.findIndex(a => a.id === adId);
+    if (index !== -1) {
+        list[index].views = (list[index].views || 0) + 1;
+        localStorage.setItem(ADS_KEY, JSON.stringify(list));
+    }
+};
+
+export const deleteAd = (adId) => {
+    const list = getAds();
+    const newList = list.filter(a => a.id !== adId);
+    localStorage.setItem(ADS_KEY, JSON.stringify(newList));
+};
