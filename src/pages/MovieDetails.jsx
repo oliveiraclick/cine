@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Share2, Play, Plus, Check, ChevronLeft, ThumbsUp, MessageSquare, User, MessageCircle } from 'lucide-react';
+import { Share2, Play, Plus, Check, ChevronLeft, ThumbsUp, MessageSquare, User, MessageCircle, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getMovieDetails } from '../services/tmdb';
 import { isInWatchlist, toggleWatchlist } from '../services/storage';
-import { X } from 'lucide-react';
 
 const MovieDetails = () => {
   const navigate = useNavigate();
@@ -13,6 +12,7 @@ const MovieDetails = () => {
   const [inWatchlist, setInWatchlist] = useState(false);
   const [showTrailer, setShowTrailer] = useState(false);
   const [trailerKey, setTrailerKey] = useState(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -55,6 +55,31 @@ const MovieDetails = () => {
     }
   };
 
+  const maskTitle = (title) => {
+    if (!title) return '****';
+    const words = title.split(' ');
+    // Mask the first word if it's long enough, or the whole thing
+    const firstWord = words[0];
+    if (firstWord.length > 3) {
+      return firstWord.substring(0, 3) + '*'.repeat(firstWord.length - 3) + (words.length > 1 ? ' ****' : '');
+    }
+    return firstWord + '****';
+  };
+
+  const handleWhatsAppShare = () => {
+    const masked = maskTitle(movie.title);
+    const text = `Estou te indicando o filme ${masked} 🤫\n\nCadastre-se no CineSocial para descobrir qual é e ver o que está perdendo!\n\nwww.cinesocial.app`;
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+    setShowShareModal(false);
+  };
+
+  const handleInternalShare = () => {
+    // Mock internal share
+    alert(`Indicado para seus amigos do Círculo!`);
+    setShowShareModal(false);
+  };
+
   if (loading) {
     return <div style={{ height: '100vh', backgroundColor: '#101010', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>Carregando...</div>;
   }
@@ -80,6 +105,30 @@ const MovieDetails = () => {
 
   return (
     <div className="details-container">
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="trailer-modal" onClick={() => setShowShareModal(false)}>
+          <div className="modal-content share-modal-content" onClick={e => e.stopPropagation()}>
+            <h3>Indicar Filme</h3>
+            <p>Escolha como quer indicar <strong>{movie.title}</strong></p>
+
+            <div className="share-options">
+              <button className="share-opt-btn internal" onClick={handleInternalShare}>
+                <div className="icon-circle"><User size={24} /></div>
+                <span>Amigos do App</span>
+              </button>
+
+              <button className="share-opt-btn whatsapp" onClick={handleWhatsAppShare}>
+                <div className="icon-circle success"><MessageCircle size={24} /></div>
+                <span>WhatsApp (Misterioso)</span>
+              </button>
+            </div>
+
+            <button className="close-share-text" onClick={() => setShowShareModal(false)}>Cancelar</button>
+          </div>
+        </div>
+      )}
+
       {/* Trailer Modal */}
       {showTrailer && (
         <div className="trailer-modal">
@@ -100,86 +149,15 @@ const MovieDetails = () => {
         </div>
       )}
 
-  /* ... existing imports ... */
-      import {User, MessageCircle} from 'lucide-react'; // Adding icons for share modal
-
-      /* ... existing component code ... */
-      const [showShareModal, setShowShareModal] = useState(false);
-
-  /* ... useEffects ... */
-
-  const maskTitle = (title) => {
-    if (!title) return '****';
-      const words = title.split(' ');
-      // Mask the first word if it's long enough, or the whole thing
-      const firstWord = words[0];
-    if (firstWord.length > 3) {
-      return firstWord.substring(0, 3) + '*'.repeat(firstWord.length - 3) + (words.length > 1 ? ' ****' : '');
-    }
-      return firstWord + '****';
-  };
-
-  const handleWhatsAppShare = () => {
-     const masked = maskTitle(movie.title);
-      const text = `Estou te indicando o filme ${masked} 🤫\n\nCadastre-se no CineSocial para descobrir qual é e ver o que está perdendo!\n\nwww.cinesocial.app`; // Verify URL later
-      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-      window.open(url, '_blank');
-      setShowShareModal(false);
-  };
-
-  const handleInternalShare = () => {
-        // Mock internal share
-        alert(`Indicado para seus amigos do Círculo!`);
-      setShowShareModal(false);
-  };
-
-      /* ... existing render ... */
-
-      return (
-      <div className="details-container">
-        {/* Share Modal */}
-        {showShareModal && (
-          <div className="trailer-modal" onClick={() => setShowShareModal(false)}>
-            <div className="modal-content share-modal-content" onClick={e => e.stopPropagation()}>
-              <h3>Indicar Filme</h3>
-              <p>Escolha como quer indicar <strong>{movie.title}</strong></p>
-
-              <div className="share-options">
-                <button className="share-opt-btn internal" onClick={handleInternalShare}>
-                  <div className="icon-circle"><User size={24} /></div>
-                  <span>Amigos do App</span>
-                </button>
-
-                <button className="share-opt-btn whatsapp" onClick={handleWhatsAppShare}>
-                  <div className="icon-circle success"><MessageCircle size={24} /></div>
-                  <span>WhatsApp (Misterioso)</span>
-                </button>
-              </div>
-
-              <button className="close-share-text" onClick={() => setShowShareModal(false)}>Cancelar</button>
-            </div>
-          </div>
-        )}
-
-        {/* Trailer Modal (Keep existing) */}
-        {showTrailer && (
-          /* ... keep trailer code ... */
-          <div className="trailer-modal">
-            {/* ... */}
-          </div>
-        )}
-
-        {/* Header Backdrop */}
-        <div className="backdrop-section">
-          <img src={backdropUrl} alt="Backdrop" className="backdrop-image" />
-          <div className="backdrop-overlay"></div>
-          <div className="top-bar">
-            <button className="icon-btn" onClick={() => navigate(-1)}><ChevronLeft color="white" /></button>
-            <button className="icon-btn" onClick={() => setShowShareModal(true)}><Share2 color="white" size={20} /></button>
-          </div>
+      {/* Header Backdrop */}
+      <div className="backdrop-section">
+        <img src={backdropUrl} alt="Backdrop" className="backdrop-image" />
+        <div className="backdrop-overlay"></div>
+        <div className="top-bar">
+          <button className="icon-btn" onClick={() => navigate(-1)}><ChevronLeft color="white" /></button>
+          <button className="icon-btn" onClick={() => setShowShareModal(true)}><Share2 color="white" size={20} /></button>
         </div>
-        {/* ... rest of render ... */
-
+      </div>
 
       <div className="content-body">
         <div className="poster-row">
@@ -803,6 +781,10 @@ const MovieDetails = () => {
            font-size: 12px;
            color: #888;
            text-decoration: underline;
+           background: none;
+           border: none;
+           cursor: pointer;
+           padding: 10px;
         }
 
         .trailer-modal {
@@ -831,7 +813,7 @@ const MovieDetails = () => {
            position: absolute;
            top: -45px;
            right: 0;
-           background-color: rgba(255, 255, 255, 0.2); /* Lighter bg for visibility on dark overlay */
+           background-color: rgba(255, 255, 255, 0.2);
            border-radius: 50%;
            width: 36px;
            height: 36px;
@@ -842,9 +824,84 @@ const MovieDetails = () => {
            cursor: pointer;
            z-index: 10;
         }
+
+        .share-modal-content {
+           background-color: #1a1a1a;
+           padding: 24px;
+           height: auto;
+           aspect-ratio: auto;
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           text-align: center;
+           gap: 16px;
+           max-width: 320px;
+        }
+
+        .share-modal-content h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            margin: 0;
+        }
+
+        .share-modal-content p {
+            font-size: 13px;
+            color: #888;
+            margin-top: -8px;
+            margin-bottom: 8px;
+        }
+
+        .share-options {
+            display: flex;
+            gap: 16px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .share-opt-btn {
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #ccc;
+            font-size: 11px;
+        }
+
+        .icon-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        
+        .icon-circle.success {
+            background-color: #25D366; /* WhatsApp Green */
+            color: white;
+        }
+
+        .share-opt-btn:active .icon-circle {
+            transform: scale(0.95);
+        }
+
+        .close-share-text {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 12px;
+            margin-top: 8px;
+            cursor: pointer;
+        }
       `}</style>
     </div>
-      );
+  );
 };
 
-      export default MovieDetails;
+export default MovieDetails;
