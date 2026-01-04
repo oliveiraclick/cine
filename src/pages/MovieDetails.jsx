@@ -46,6 +46,20 @@ const MovieDetails = () => {
   // Mock circle score for now as TMDB vote_average is different scale
   const circleScore = (movie.vote_average).toFixed(1);
 
+  const handleWatchTrailer = () => {
+    if (movie.videos && movie.videos.results) {
+      const trailer = movie.videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+      if (trailer) {
+        window.open(`https://www.youtube.com/watch?v=${trailer.key}`, '_blank');
+      } else {
+        // Fallback to searching on YouTube
+        window.open(`https://www.youtube.com/results?search_query=${movie.title}+trailer`, '_blank');
+      }
+    } else {
+      window.open(`https://www.youtube.com/results?search_query=${movie.title}+trailer`, '_blank');
+    }
+  };
+
   return (
     <div className="details-container">
       {/* Header Backdrop */}
@@ -85,11 +99,11 @@ const MovieDetails = () => {
         </div>
 
         <div className="action-buttons">
-          <button className="btn btn-white btn-play">
-            <Play size={18} fill="black" /> Assistir Trailer
+          <button className="btn btn-white btn-play" onClick={handleWatchTrailer}>
+            <Play size={18} fill="black" /> Ver Trailer
           </button>
           <button className="btn btn-dark-outline">
-            <Plus size={18} /> Watchlist
+            <Plus size={18} /> Quero Ver
           </button>
           <button className="btn btn-circle-green">
             <Check size={20} />
