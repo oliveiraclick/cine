@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Share2, Play, Plus, Check, ChevronLeft, ThumbsUp, MessageSquare } from 'lucide-react';
+import { Share2, Play, Plus, Check, ChevronLeft, ThumbsUp, MessageSquare, User, MessageCircle } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getMovieDetails } from '../services/tmdb';
 import { isInWatchlist, toggleWatchlist } from '../services/storage';
@@ -100,15 +100,86 @@ const MovieDetails = () => {
         </div>
       )}
 
-      {/* Header Backdrop */}
-      <div className="backdrop-section">
-        <img src={backdropUrl} alt="Backdrop" className="backdrop-image" />
-        <div className="backdrop-overlay"></div>
-        <div className="top-bar">
-          <button className="icon-btn" onClick={() => navigate(-1)}><ChevronLeft color="white" /></button>
-          <button className="icon-btn"><Share2 color="white" size={20} /></button>
+  /* ... existing imports ... */
+      import {User, MessageCircle} from 'lucide-react'; // Adding icons for share modal
+
+      /* ... existing component code ... */
+      const [showShareModal, setShowShareModal] = useState(false);
+
+  /* ... useEffects ... */
+
+  const maskTitle = (title) => {
+    if (!title) return '****';
+      const words = title.split(' ');
+      // Mask the first word if it's long enough, or the whole thing
+      const firstWord = words[0];
+    if (firstWord.length > 3) {
+      return firstWord.substring(0, 3) + '*'.repeat(firstWord.length - 3) + (words.length > 1 ? ' ****' : '');
+    }
+      return firstWord + '****';
+  };
+
+  const handleWhatsAppShare = () => {
+     const masked = maskTitle(movie.title);
+      const text = `Estou te indicando o filme ${masked} 🤫\n\nCadastre-se no CineSocial para descobrir qual é e ver o que está perdendo!\n\nwww.cinesocial.app`; // Verify URL later
+      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+      setShowShareModal(false);
+  };
+
+  const handleInternalShare = () => {
+        // Mock internal share
+        alert(`Indicado para seus amigos do Círculo!`);
+      setShowShareModal(false);
+  };
+
+      /* ... existing render ... */
+
+      return (
+      <div className="details-container">
+        {/* Share Modal */}
+        {showShareModal && (
+          <div className="trailer-modal" onClick={() => setShowShareModal(false)}>
+            <div className="modal-content share-modal-content" onClick={e => e.stopPropagation()}>
+              <h3>Indicar Filme</h3>
+              <p>Escolha como quer indicar <strong>{movie.title}</strong></p>
+
+              <div className="share-options">
+                <button className="share-opt-btn internal" onClick={handleInternalShare}>
+                  <div className="icon-circle"><User size={24} /></div>
+                  <span>Amigos do App</span>
+                </button>
+
+                <button className="share-opt-btn whatsapp" onClick={handleWhatsAppShare}>
+                  <div className="icon-circle success"><MessageCircle size={24} /></div>
+                  <span>WhatsApp (Misterioso)</span>
+                </button>
+              </div>
+
+              <button className="close-share-text" onClick={() => setShowShareModal(false)}>Cancelar</button>
+            </div>
+          </div>
+        )}
+
+        {/* Trailer Modal (Keep existing) */}
+        {showTrailer && (
+          /* ... keep trailer code ... */
+          <div className="trailer-modal">
+            {/* ... */}
+          </div>
+        )}
+
+        {/* Header Backdrop */}
+        <div className="backdrop-section">
+          <img src={backdropUrl} alt="Backdrop" className="backdrop-image" />
+          <div className="backdrop-overlay"></div>
+          <div className="top-bar">
+            <button className="icon-btn" onClick={() => navigate(-1)}><ChevronLeft color="white" /></button>
+            <button className="icon-btn" onClick={() => setShowShareModal(true)}><Share2 color="white" size={20} /></button>
+          </div>
         </div>
-      </div>
+        {/* ... rest of render ... */
+
 
       <div className="content-body">
         <div className="poster-row">
@@ -773,7 +844,7 @@ const MovieDetails = () => {
         }
       `}</style>
     </div>
-  );
+      );
 };
 
-export default MovieDetails;
+      export default MovieDetails;
