@@ -8,7 +8,8 @@ const Search = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState(null); // specific structure: { best: ..., others: ... }
+  const [dataResults, setDataResults] = useState([]); // Store raw data
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'movie', 'tv'
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -17,18 +18,35 @@ const Search = () => {
     setLoading(false);
 
     if (data && data.results) {
-      // Filter only movies and series for now
-      const filtered = data.results.filter(i => i.media_type === 'movie' || i.media_type === 'tv');
-
-      if (filtered.length > 0) {
-        setResults({
-          best: filtered[0],
-          others: filtered.slice(1)
-        });
-      } else {
-        setResults({ best: null, others: [] });
-      }
+      // Filter only movies and series for now to keep it clean
+      const valid = data.results.filter(i => i.media_type === 'movie' || i.media_type === 'tv');
+      setDataResults(valid);
     }
+  };
+
+  const getFilteredResults = () => {
+    if (!dataResults || dataResults.length === 0) return { best: null, others: [] };
+
+    let filtered = dataResults;
+    if (activeFilter === 'movie') {
+      filtered = dataResults.filter(i => i.media_type === 'movie');
+    } else if (activeFilter === 'tv') {
+      filtered = dataResults.filter(i => i.media_type === 'tv');
+    }
+
+    if (filtered.length === 0) return { best: null, others: [] };
+
+    return {
+      best: filtered[0],
+      others: filtered.slice(1)
+    };
+  };
+
+  const results = getFilteredResults();
+
+  const handleNavigation = (item) => {
+    const type = item.media_type === 'tv' ? 'tv' : 'movie';
+    navigate(`/${type}/${item.id}`);
   };
 
   const handleKeyDown = (e) => {
@@ -60,11 +78,11 @@ const Search = () => {
       </div>
 
       {/* Filters (Chips) */}
+      {/* Filters (Chips) */}
       <div className="filter-chips">
-        <div className="chip active">Todos</div>
-        <div className="chip">Filmes</div>
-        <div className="chip">Séries</div>
-        <div className="chip">Pessoas</div>
+        <div className={`chip ${activeFilter === 'all' ? 'active' : ''}`} onClick={() => setActiveFilter('all')}>Todos</div>
+        <div className={`chip ${activeFilter === 'movie' ? 'active' : ''}`} onClick={() => setActiveFilter('movie')}>Filmes</div>
+        <div className={`chip ${activeFilter === 'tv' ? 'active' : ''}`} onClick={() => setActiveFilter('tv')}>Séries</div>
       </div>
 
       <div className="search-content">
@@ -73,9 +91,10 @@ const Search = () => {
         {!loading && results && results.best && (
           <>
             {/* Best Result */}
+            {/* Best Result */}
             <section className="result-section">
               <h3 className="section-label">MELHOR RESULTADO</h3>
-              <div className="best-result-card" onClick={() => navigate(`/movie/${results.best.id}`)}>
+              <div className="best-result-card" onClick={() => handleNavigation(results.best)}>
                 <img
                   src={results.best.poster_path ? `https://image.tmdb.org/t/p/w200${results.best.poster_path}` : 'https://via.placeholder.com/100x150'}
                   alt={results.best.title || results.best.name}
@@ -96,7 +115,7 @@ const Search = () => {
             <section className="result-section">
               <h3 className="section-label">OUTROS RESULTADOS</h3>
               {results.others.map(item => (
-                <div key={item.id} className="list-item" onClick={() => navigate(`/movie/${item.id}`)}>
+                <div key={item.id} className="list-item" onClick={() => handleNavigation(item)}>
                   <div className="item-left">
                     <div className="mini-poster-placeholder">
                       <img

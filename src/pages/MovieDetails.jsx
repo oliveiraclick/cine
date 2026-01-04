@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Share2, Play, Plus, Check, ChevronLeft, ThumbsUp, MessageSquare, User, MessageCircle, X } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getMovieDetails } from '../services/tmdb';
 import { isInWatchlist, toggleWatchlist } from '../services/storage';
 
 const MovieDetails = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -14,11 +15,14 @@ const MovieDetails = () => {
   const [trailerKey, setTrailerKey] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
 
+  const isTv = location.pathname.includes('/tv/');
+  const mediaType = isTv ? 'tv' : 'movie';
+
   useEffect(() => {
     const fetchDetails = async () => {
       if (!id) return;
       setLoading(true);
-      const data = await getMovieDetails(id);
+      const data = await getMovieDetails(id, mediaType);
       if (data) {
         setMovie(data);
         setInWatchlist(isInWatchlist(data.id));
@@ -32,7 +36,7 @@ const MovieDetails = () => {
     };
 
     fetchDetails();
-  }, [id]);
+  }, [id, mediaType]);
 
   const handleToggleWatchlist = () => {
     if (!movie) return;
@@ -44,13 +48,12 @@ const MovieDetails = () => {
     if (trailerKey) {
       setShowTrailer(true);
     } else {
-      // Fallback if no specific trailer found in API, try searching or just alert
       const fallback = movie?.videos?.results?.[0]?.key;
       if (fallback) {
         setTrailerKey(fallback);
         setShowTrailer(true);
       } else {
-        window.open(`https://www.youtube.com/results?search_query=${movie.title}+trailer`, '_blank');
+        window.open(`https://www.youtube.com/results?search_query=${movie.title || movie.name}+trailer`, '_blank');
       }
     }
   };
@@ -58,7 +61,6 @@ const MovieDetails = () => {
   const maskTitle = (title) => {
     if (!title) return '****';
     const words = title.split(' ');
-    // Mask the first word if it's long enough, or the whole thing
     const firstWord = words[0];
     if (firstWord.length > 3) {
       return firstWord.substring(0, 3) + '*'.repeat(firstWord.length - 3) + (words.length > 1 ? ' ****' : '');
@@ -67,15 +69,14 @@ const MovieDetails = () => {
   };
 
   const handleWhatsAppShare = () => {
-    const masked = maskTitle(movie.title);
-    const text = `Estou te indicando o filme ${masked} 🤫\n\nCadastre-se no CineSocial para descobrir qual é e ver o que está perdendo!\n\nwww.cinesocial.app`;
+    const masked = maskTitle(movie.title || movie.name);
+    const text = `Estou te indicando ${isTv ? 'a série' : 'o filme'} ${masked} 🤫\n\nCadastre-se no CineSocial para descobrir qual é e ver o que está perdendo!\n\nwww.cinesocial.app`;
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
     setShowShareModal(false);
   };
 
   const handleInternalShare = () => {
-    // Mock internal share
     alert(`Indicado para seus amigos do Círculo!`);
     setShowShareModal(false);
   };
@@ -96,12 +97,22 @@ const MovieDetails = () => {
     ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
     : 'https://via.placeholder.com/300x450?text=No+Poster';
 
-  const year = movie.release_date ? movie.release_date.substring(0, 4) : '';
-  const runtime = movie.runtime ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m` : '';
+  const title = movie.title || movie.name;
+  const date = movie.release_date || movie.first_air_date;
+  const year = date ? date.substring(0, 4) : '';
+
+  let formattedRuntime = '';
+  if (movie.runtime) {
+    formattedRuntime = `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m`;
+  } else if (movie.episode_run_time && movie.episode_run_time.length > 0) {
+    formattedRuntime = `${movie.episode_run_time[0]}m (ep)`;
+  } else if (movie.number_of_seasons) {
+    formattedRuntime = `${movie.number_of_seasons} Temporadas`;
+  }
+
   const genres = movie.genres ? movie.genres.slice(0, 3) : [];
   const cast = movie.credits && movie.credits.cast ? movie.credits.cast.slice(0, 6) : [];
-  // Mock circle score for now as TMDB vote_average is different scale
-  const circleScore = (movie.vote_average).toFixed(1);
+  const circleScore = (movie.vote_average) ? (movie.vote_average).toFixed(1) : '0.0';
 
   return (
     <div className="details-container">
@@ -109,8 +120,8 @@ const MovieDetails = () => {
       {showShareModal && (
         <div className="trailer-modal" onClick={() => setShowShareModal(false)}>
           <div className="modal-content share-modal-content" onClick={e => e.stopPropagation()}>
-            <h3>Indicar Filme</h3>
-            <p>Escolha como quer indicar <strong>{movie.title}</strong></p>
+            <h3>Indicar {isTv ? 'Série' : 'Filme'}</h3>
+            <p>Escolha como quer indicar <strong>{title}</strong></p>
 
             <div className="share-options">
               <button className="share-opt-btn internal" onClick={handleInternalShare}>
@@ -161,15 +172,15 @@ const MovieDetails = () => {
 
       <div className="content-body">
         <div className="poster-row">
-          <img src={posterUrl} alt={movie.title} className="main-poster" />
+          <img src={posterUrl} alt={title} className="main-poster" />
           <div className="header-info">
             <div className="tags">
               {genres.map(g => (
                 <span key={g.id} className="tag">{g.name.toUpperCase()}</span>
               ))}
             </div>
-            <h1 className="movie-title">{movie.title}</h1>
-            <p className="movie-meta">{year} • {runtime}</p>
+            <h1 className="movie-title">{title}</h1>
+            <p className="movie-meta">{year} • {formattedRuntime}</p>
 
             <div className="circle-score-box">
               <div className="score-label">CÍRCULO DE AMIGOS</div>
@@ -177,7 +188,6 @@ const MovieDetails = () => {
                 <span className="big-score">{circleScore}</span>
                 <span className="max-score">/10</span>
               </div>
-              {/* Circle Chart Placeholder */}
               <div className="heart-circle">
                 <div className="heart-icon"></div>
               </div>
@@ -205,7 +215,6 @@ const MovieDetails = () => {
         <div className="section">
           <h3>Onde Assistir</h3>
           <div className="streaming-row">
-            {/* Mock Streaming data, as TMDB watch providers api needs specific region/setup usually */}
             <div className="stream-option">
               <div className="stream-logo netflix">N</div>
               <div className="stream-info">
@@ -270,7 +279,6 @@ const MovieDetails = () => {
             <button className="filter-btn">Filtrar</button>
           </div>
 
-          {/* MOCK REVIEWS FOR NOW */}
           <div className="review-card-featured">
             <div className="review-header">
               <div className="reviewer">
@@ -800,104 +808,89 @@ const MovieDetails = () => {
         }
 
         .modal-content {
+           position: relative;
            width: 100%;
            max-width: 800px;
            aspect-ratio: 16/9;
            background-color: black;
-           position: relative;
-           border-radius: 8px;
-           /* overflow: hidden; Removed to allow button outside */
+           box-shadow: 0 0 20px rgba(255,255,255,0.1);
         }
 
         .close-modal {
            position: absolute;
-           top: -45px;
+           top: -40px;
            right: 0;
-           background-color: rgba(255, 255, 255, 0.2);
-           border-radius: 50%;
-           width: 36px;
-           height: 36px;
-           display: flex;
-           align-items: center;
-           justify-content: center;
+           background: none;
            border: none;
            cursor: pointer;
-           z-index: 10;
         }
 
         .share-modal-content {
            background-color: #1a1a1a;
-           padding: 24px;
-           height: auto;
+           border-radius: 12px;
            aspect-ratio: auto;
-           display: flex;
-           flex-direction: column;
-           align-items: center;
+           padding: 24px;
            text-align: center;
-           gap: 16px;
            max-width: 320px;
         }
 
         .share-modal-content h3 {
-            font-size: 18px;
-            font-weight: 700;
-            color: white;
-            margin: 0;
+           font-size: 18px;
+           margin-bottom: 8px;
         }
 
         .share-modal-content p {
-            font-size: 13px;
-            color: #888;
-            margin-top: -8px;
-            margin-bottom: 8px;
+           font-size: 14px;
+           color: #aaa;
+           margin-bottom: 24px;
         }
 
         .share-options {
-            display: flex;
-            gap: 16px;
-            width: 100%;
-            justify-content: center;
+           display: flex;
+           flex-direction: column;
+           gap: 12px;
+           margin-bottom: 20px;
         }
 
         .share-opt-btn {
-            background: none;
-            border: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            color: #ccc;
-            font-size: 11px;
+           background-color: #222;
+           border: 1px solid #333;
+           border-radius: 8px;
+           padding: 12px;
+           display: flex;
+           align-items: center;
+           gap: 12px;
+           color: white;
+           cursor: pointer;
+           transition: background 0.2s;
+        }
+
+        .share-opt-btn:active {
+           background-color: #333;
         }
 
         .icon-circle {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
-        }
-        
-        .icon-circle.success {
-            background-color: #25D366; /* WhatsApp Green */
-            color: white;
+           width: 36px;
+           height: 36px;
+           border-radius: 50%;
+           background-color: #333;
+           display: flex;
+           align-items: center;
+           justify-content: center;
         }
 
-        .share-opt-btn:active .icon-circle {
-            transform: scale(0.95);
+        .icon-circle.success {
+           background-color: #25D366;
+           color: white;
         }
 
         .close-share-text {
-            background: none;
-            border: none;
-            color: #666;
-            font-size: 12px;
-            margin-top: 8px;
-            cursor: pointer;
+           background: none;
+           border: none;
+           color: #888;
+           font-size: 12px;
+           cursor: pointer;
+           text-decoration: underline;
         }
       `}</style>
     </div>

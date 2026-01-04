@@ -35,6 +35,7 @@ function App() {
         <Route path="/feed" element={<Feed />} />
         <Route path="/search" element={<Search />} />
         <Route path="/movie/:id" element={<MovieDetails />} />
+        <Route path="/tv/:id" element={<MovieDetails />} />
         <Route path="/create-review" element={<CreateReview />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/notifications" element={<Notifications />} />
