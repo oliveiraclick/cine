@@ -28,11 +28,12 @@ const Feed = () => {
       if (nowPlaying?.results) {
         const mappedRadar = nowPlaying.results.slice(0, 5).map((m, i) => ({
           id: m.id,
-          title: m.title,
+          title: m.title || m.name,
           poster: m.poster_path ? `https://image.tmdb.org/t/p/w200${m.poster_path}` : '',
           rating: m.vote_average.toFixed(1),
           user: mockUsers[i % mockUsers.length].name.split(' ')[0],
-          avatar: mockUsers[i % mockUsers.length].avatar
+          avatar: mockUsers[i % mockUsers.length].avatar,
+          isShow: m.media_type === 'tv' // Capture type
         }));
         setRadarItems(mappedRadar);
       }
@@ -135,7 +136,7 @@ const Feed = () => {
 
             <div className="radar-carousel">
               {radarItems.map(item => (
-                <div key={item.id} className="radar-card" onClick={() => navigate(`/movie/${item.id}`)}>
+                <div key={item.id} className="radar-card" onClick={() => navigate(item.isShow ? `/tv/${item.id}` : `/movie/${item.id}`)}>
                   <div className="poster-wrapper">
                     <img src={item.poster} alt={item.title} className="radar-poster" />
                     <div className="radar-rating">★ {item.rating}</div>
@@ -162,7 +163,7 @@ const Feed = () => {
             /* CINEMA GRID VIEW */
             <div className="cinema-grid">
               {radarItems.map(movie => ( // Using radarItems which contains NowPlaying data
-                <div key={movie.id} className="cinema-poster-card" onClick={() => navigate(`/movie/${movie.id}`)}>
+                <div key={movie.id} className="cinema-poster-card" onClick={() => navigate(movie.isShow ? `/tv/${movie.id}` : `/movie/${movie.id}`)}>
                   <img src={movie.poster} className="grid-poster" />
                   <div className="grid-info">
                     <span className="grid-title">{movie.title}</span>
@@ -175,7 +176,7 @@ const Feed = () => {
             /* SOCIAL FEED LIST */
             <div className="feed-list">
               {currentActivities.map(item => (
-                <div key={item.id} className="feed-card" onClick={() => navigate(`/movie/${item.id}`)}>
+                <div key={item.id} className="feed-card" onClick={() => navigate(item.isShow ? `/tv/${item.id}` : `/movie/${item.id}`)}>
                   <div className="card-header">
                     <div className="user-info">
                       <img src={item.user.avatar} alt={item.user.name} className="user-avatar" />
