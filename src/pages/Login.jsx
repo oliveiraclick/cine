@@ -22,16 +22,21 @@ const Login = () => {
             const password = formData.password.trim();
 
             // Hardcoded Admin Credentials
-            if (email === 'denyscobroges@gmail.com' && password === 'Vendas@123') {
-              navigate('/admin');
-            } else {
-              if (isUserBlocked(formData.identifier)) {
-                alert('Acesso negado. Sua conta foi suspensa temporariamente.');
-                return;
+            if (email === 'denyscobroges@gmail.com') {
+              if (password === 'Vendas@123') {
+                navigate('/admin');
+              } else {
+                alert('Senha de Admin incorreta! Verifique se Vendas está com V maiúsculo.');
               }
-              saveUser(formData.identifier); // Register user for Admin list
-              navigate('/feed');
+              return; // Stop execution here so we don't log in as regular user
             }
+
+            if (isUserBlocked(formData.identifier)) {
+              alert('Acesso negado. Sua conta foi suspensa temporariamente.');
+              return;
+            }
+            saveUser(formData.identifier); // Register user for Admin list
+            navigate('/feed');
           }}>
             <div className="form-group">
               <input
@@ -195,7 +200,7 @@ const Login = () => {
           font-weight: 500;
         }
       `}</style>
-    </div>
+    </div >
   );
 };
 
