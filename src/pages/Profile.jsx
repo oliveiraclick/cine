@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Share2, Crown, ChevronRight, Grid, Bookmark, ChevronLeft, LogOut } from 'lucide-react';
+import { Settings, Share2, Crown, ChevronRight, Grid, Bookmark, ChevronLeft, LogOut, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { getWatchlist, getUserReviews } from '../services/storage';
@@ -452,7 +452,7 @@ const Profile = () => {
             font-weight: 700;
          }
        `}</style>
-      </div >
+      </div>
    );
 };
 
