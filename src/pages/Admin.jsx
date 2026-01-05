@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, Megaphone, Plus, Trash2, Eye, BarChart2, TrendingUp, Award, Upload, Lock, Unlock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Users, Megaphone, Plus, Trash2, Eye, BarChart2, TrendingUp, Award, Upload, Lock, Unlock, LogOut } from 'lucide-react';
 import { getAds, addAd, deleteAd, getReviews, getUsers, toggleBlockUser } from '../services/storage';
 
 const Admin = () => {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('dashboard');
     const [ads, setAds] = useState([]);
     const [userList, setUserList] = useState([]);
@@ -58,6 +60,12 @@ const Admin = () => {
                 </div>
                 <div className={`nav-item ${activeTab === 'ads' ? 'active' : ''}`} onClick={() => setActiveTab('ads')}>
                     <Megaphone size={20} /> Publicidade
+                </div>
+
+                <div style={{ marginTop: 'auto', borderTop: '1px solid #222', paddingTop: 10 }}>
+                    <div className="nav-item" onClick={() => navigate('/')} style={{ color: '#E50914' }}>
+                        <LogOut size={20} /> Sair
+                    </div>
                 </div>
             </div>
 
