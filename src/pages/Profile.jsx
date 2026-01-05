@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Settings, Share2, Crown, ChevronRight, Grid, Bookmark, ChevronLeft } from 'lucide-react';
+import { Settings, Share2, Crown, ChevronRight, Grid, Bookmark, ChevronLeft, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
-
 import { getWatchlist, getUserReviews } from '../services/storage';
 
 const Profile = () => {
@@ -30,11 +29,13 @@ const Profile = () => {
 
    return (
       <div className="profile-container">
-         {/* ... Header & Info (Unchanged except minor prop updates if needed) ... */}
          <div className="profile-header">
             <button className="icon-btn-simple" onClick={() => navigate(-1)}><ChevronLeft size={20} color="white" /></button>
             <span className="username">@mari_cina</span>
-            <button className="icon-btn-simple"><Settings size={20} color="white" /></button>
+            <div style={{ display: 'flex', gap: 10 }}>
+               <button className="icon-btn-simple"><Settings size={20} color="white" /></button>
+               <button className="icon-btn-simple" onClick={() => navigate('/login')}><LogOut size={20} color="#E50914" /></button>
+            </div>
          </div>
 
          <div className="profile-info">
@@ -451,7 +452,7 @@ const Profile = () => {
             font-weight: 700;
          }
        `}</style>
-      </div>
+      </div >
    );
 };
 
