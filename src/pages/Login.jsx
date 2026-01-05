@@ -18,7 +18,11 @@ const Login = () => {
 
           <form className="auth-form" onSubmit={(e) => {
             e.preventDefault();
-            if (formData.identifier === 'denyscobroges@gmail.com' && formData.password === 'Vendas@123') {
+            const email = formData.identifier.trim().toLowerCase();
+            const password = formData.password.trim();
+
+            // Hardcoded Admin Credentials
+            if (email === 'denyscobroges@gmail.com' && password === 'Vendas@123') {
               navigate('/admin');
             } else {
               if (isUserBlocked(formData.identifier)) {
