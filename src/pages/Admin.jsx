@@ -389,6 +389,76 @@ const Admin = () => {
                     background-color: rgba(229, 9, 20, 0.1);
                     border-radius: 4px;
                 }
+
+                @media (max-width: 768px) {
+                    .admin-container {
+                        flex-direction: column;
+                    }
+                    
+                    .admin-sidebar {
+                        width: 100%;
+                        height: auto;
+                        flex-direction: row;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 10px 15px;
+                        border-right: none;
+                        border-bottom: 1px solid #222;
+                        position: sticky;
+                        top: 0;
+                        z-index: 100;
+                    }
+
+                    .admin-logo {
+                        margin-bottom: 0;
+                        font-size: 18px;
+                    }
+
+                    .nav-item {
+                        padding: 8px;
+                        font-size: 10px;
+                        flex-direction: column;
+                        gap: 4px;
+                        text-align: center;
+                    }
+
+                    /* Hide label on very small screens if needed, or keep stacked */
+                    .nav-item svg {
+                        width: 18px;
+                        height: 18px;
+                    }
+
+                    .admin-content {
+                        padding: 15px;
+                    }
+
+                    .dashboard-grid {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .stat-card {
+                        padding: 15px;
+                    }
+
+                    .ads-grid {
+                        grid-template-columns: 1fr;
+                    }
+                    
+                    .lb-header, .lb-row {
+                        grid-template-columns: 1.5fr 1fr 0.5fr;
+                        font-size: 12px;
+                    }
+                    
+                    /* Make input row column on mobile */
+                    .input-row {
+                        flex-direction: column;
+                    }
+                    
+                    .btn-add {
+                        justify-content: center;
+                        padding: 12px;
+                    }
+                }
             `}</style>
         </div>
     );
