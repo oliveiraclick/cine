@@ -55,7 +55,7 @@ const Admin = () => {
                 <div className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
                     <LayoutDashboard size={20} /> Dashboard
                 </div>
-                <div className={`nav-item ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
+                <div className={`admin-nav-item ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
                     <Users size={20} /> Usuários
                 </div>
                 <div className={`nav-item ${activeTab === 'ads' ? 'active' : ''}`} onClick={() => setActiveTab('ads')}>
@@ -228,7 +228,7 @@ const Admin = () => {
                     margin-bottom: 30px;
                 }
 
-                .nav-item {
+                .admin-nav-item {
                     display: flex;
                     align-items: center;
                     gap: 12px;
@@ -239,7 +239,7 @@ const Admin = () => {
                     transition: all 0.2s;
                 }
 
-                .nav-item:hover, .nav-item.active {
+                .admin-nav-item:hover, .admin-nav-item.active {
                     background-color: #1a1a1a;
                     color: white;
                 }
@@ -489,7 +489,7 @@ const Admin = () => {
                         font-size: 18px;
                     }
 
-                    .nav-item {
+                    .admin-nav-item {
                         padding: 8px;
                         font-size: 10px;
                         flex-direction: column;
@@ -498,7 +498,7 @@ const Admin = () => {
                     }
 
                     /* Hide label on very small screens if needed, or keep stacked */
-                    .nav-item svg {
+                    .admin-nav-item svg {
                         width: 18px;
                         height: 18px;
                     }
