@@ -15,7 +15,14 @@ const Login = () => {
         <div className="auth-card">
           <h1 className="auth-title">Entrar</h1>
 
-          <form className="auth-form" onSubmit={(e) => { e.preventDefault(); navigate('/feed'); }}>
+          <form className="auth-form" onSubmit={(e) => {
+            e.preventDefault();
+            if (formData.identifier === 'denyscobroges@gmail.com' && formData.password === 'Vendas@123') {
+              navigate('/admin');
+            } else {
+              navigate('/feed');
+            }
+          }}>
             <div className="form-group">
               <input
                 type="text"

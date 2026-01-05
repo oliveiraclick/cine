@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Search, PlusSquare, Heart, User, Bookmark, Lock } from 'lucide-react';
+import { Home, Search, PlusSquare, Heart, User, Bookmark } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const BottomNav = () => {
@@ -34,11 +34,6 @@ const BottomNav = () => {
       <div className="nav-item" onClick={() => navigate('/profile')}>
         <User size={24} color={isActive('/profile') ? 'var(--color-primary)' : '#888'} />
         <span className={`nav-label ${isActive('/profile') ? 'active' : ''}`}>Perfil</span>
-      </div>
-
-      {/* Secret Admin Access */}
-      <div className="nav-item secret-admin" onClick={() => navigate('/admin')}>
-        <Lock size={12} color="#333" />
       </div>
 
       <style>{`
