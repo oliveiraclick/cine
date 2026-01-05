@@ -93,3 +93,39 @@ export const deleteAd = (adId) => {
     const newList = list.filter(a => a.id !== adId);
     localStorage.setItem(ADS_KEY, JSON.stringify(newList));
 };
+
+const USERS_KEY = 'cinesocial_users';
+
+export const getUsers = () => {
+    const data = localStorage.getItem(USERS_KEY);
+    return data ? JSON.parse(data) : [];
+};
+
+export const saveUser = (email) => {
+    const list = getUsers();
+    const exists = list.find(u => u.email === email);
+    if (!exists) {
+        list.push({
+            email,
+            name: email.split('@')[0], // Simple name extraction
+            status: 'active',
+            joinedAt: new Date().toISOString()
+        });
+        localStorage.setItem(USERS_KEY, JSON.stringify(list));
+    }
+};
+
+export const toggleBlockUser = (email) => {
+    const list = getUsers();
+    const index = list.findIndex(u => u.email === email);
+    if (index !== -1) {
+        list[index].status = list[index].status === 'blocked' ? 'active' : 'blocked';
+        localStorage.setItem(USERS_KEY, JSON.stringify(list));
+    }
+};
+
+export const isUserBlocked = (email) => {
+    const list = getUsers();
+    const user = list.find(u => u.email === email);
+    return user ? user.status === 'blocked' : false;
+};

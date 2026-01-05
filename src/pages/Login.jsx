@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
+import { saveUser, isUserBlocked } from '../services/storage';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -20,6 +21,11 @@ const Login = () => {
             if (formData.identifier === 'denyscobroges@gmail.com' && formData.password === 'Vendas@123') {
               navigate('/admin');
             } else {
+              if (isUserBlocked(formData.identifier)) {
+                alert('Acesso negado. Sua conta foi suspensa temporariamente.');
+                return;
+              }
+              saveUser(formData.identifier); // Register user for Admin list
               navigate('/feed');
             }
           }}>

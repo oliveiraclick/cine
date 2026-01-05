@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, Megaphone, Plus, Trash2, Eye, BarChart2, TrendingUp, Award } from 'lucide-react';
-import { getAds, addAd, deleteAd, getReviews, getWatchlist } from '../services/storage';
+import { LayoutDashboard, Users, Megaphone, Plus, Trash2, Eye, BarChart2, TrendingUp, Award, Upload, Lock, Unlock } from 'lucide-react';
+import { getAds, addAd, deleteAd, getReviews, getUsers, toggleBlockUser } from '../services/storage';
 
 const Admin = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [ads, setAds] = useState([]);
-    const [newAdUrl, setNewAdUrl] = useState('');
+    const [userList, setUserList] = useState([]);
     const [stats, setStats] = useState({ users: 0, reviews: 0, recommendations: 0 });
 
     useEffect(() => {
@@ -14,19 +14,30 @@ const Admin = () => {
 
     const loadData = () => {
         setAds(getAds());
+        setUserList(getUsers());
         const reviews = getReviews();
         // Mock User Count relative to reviews or just random base
         setStats({
-            users: 142 + reviews.length, // Mock growth
-            reviews: reviews.length + 85, // Real + Mock base
+            users: getUsers().length,
+            reviews: reviews.length + 85,
             recommendations: Math.floor((reviews.length + 85) * 1.5)
         });
     };
 
-    const handleAddAd = () => {
-        if (!newAdUrl) return;
-        addAd(newAdUrl, '#');
-        setNewAdUrl('');
+    const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                addAd(reader.result, '#');
+                loadData();
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleToggleBlock = (email) => {
+        toggleBlockUser(email);
         loadData();
     };
 
@@ -112,16 +123,17 @@ const Admin = () => {
                 {activeTab === 'ads' && (
                     <div className="ads-manager">
                         <div className="add-ad-box">
-                            <h3>Adicionar Novo Anúncio</h3>
+                            <h3>Adicionar Novo Anúncio (Upload)</h3>
                             <div className="input-row">
-                                <input
-                                    type="text"
-                                    placeholder="Cole a URL da imagem aqui..."
-                                    className="ad-input"
-                                    value={newAdUrl}
-                                    onChange={(e) => setNewAdUrl(e.target.value)}
-                                />
-                                <button className="btn-add" onClick={handleAddAd}><Plus size={18} /> Adicionar</button>
+                                <label className="upload-btn-wrapper">
+                                    <button className="btn-upload"><Upload size={18} /> Escolher Imagem (Máx 10)</button>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileUpload}
+                                    />
+                                </label>
+                                <span style={{ fontSize: 12, color: '#666', marginTop: 10 }}>Suporta JPG, PNG. O arquivo será salvo internamente.</span>
                             </div>
                         </div>
 
@@ -144,10 +156,41 @@ const Admin = () => {
                 )}
 
                 {activeTab === 'users' && (
-                    <div style={{ padding: 20, color: '#666' }}>
-                        Funcionalidade de gestão de usuários em desenvolvimento.
-                        <br />
-                        Visualização da lista completa de <b>{stats.users}</b> usuários.
+                    <div className="users-manager">
+                        <h3>Usuários Cadastrados ({userList.length})</h3>
+                        <div className="lb-table">
+                            <div className="lb-header" style={{ gridTemplateColumns: '2fr 2fr 1fr 1fr' }}>
+                                <span>Nome</span>
+                                <span>Email</span>
+                                <span>Status</span>
+                                <span>Ação</span>
+                            </div>
+                            {userList.length === 0 && <p style={{ padding: 20, color: '#666' }}>Nenhum usuário registrado ainda.</p>}
+                            {userList.map((u, i) => (
+                                <div key={i} className="lb-row" style={{ gridTemplateColumns: '2fr 2fr 1fr 1fr' }}>
+                                    <div className="lb-user">
+                                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#333' }}></div>
+                                        {u.name}
+                                    </div>
+                                    <span style={{ fontSize: 12, color: '#aaa' }}>{u.email}</span>
+                                    <span style={{
+                                        color: u.status === 'blocked' ? 'var(--color-error)' : 'var(--color-success)',
+                                        fontWeight: 700,
+                                        fontSize: 10,
+                                        textTransform: 'uppercase'
+                                    }}>
+                                        {u.status === 'blocked' ? 'Bloqueado' : 'Ativo'}
+                                    </span>
+                                    <button
+                                        className="btn-action"
+                                        onClick={() => handleToggleBlock(u.email)}
+                                        style={{ color: u.status === 'blocked' ? '#4cd137' : '#E50914', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                                    >
+                                        {u.status === 'blocked' ? <Unlock size={16} /> : <Lock size={16} />}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
             </main>
@@ -385,9 +428,33 @@ const Admin = () => {
                     padding: 4px;
                 }
 
-                .btn-delete:hover {
-                    background-color: rgba(229, 9, 20, 0.1);
-                    border-radius: 4px;
+                .upload-btn-wrapper {
+                    position: relative;
+                    overflow: hidden;
+                    display: inline-block;
+                }
+                
+                .btn-upload {
+                    border: 1px solid #333;
+                    color: white;
+                    background-color: #222;
+                    padding: 8px 20px;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    font-weight: 700;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    cursor: pointer;
+                }
+                
+                .upload-btn-wrapper input[type=file] {
+                    font-size: 100px;
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    opacity: 0;
+                    cursor: pointer;
                 }
 
                 @media (max-width: 768px) {
