@@ -49,7 +49,7 @@ const BottomNav = () => {
           align-items: center;
           border-top: 1px solid #222;
           padding-bottom: 4px;
-          z-index: 100;
+          z-index: 9999;
         }
 
         .nav-item {

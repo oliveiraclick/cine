@@ -21,8 +21,10 @@ const Login = () => {
             const email = formData.identifier.trim().toLowerCase();
             const password = formData.password.trim();
 
-            // Hardcoded Admin Credentials
-            if (email === 'denyscobroges@gmail.com') {
+            // Hardcoded Admin Credentials (Allow common typos/options)
+            const validAdmins = ['denyscobroges@gmail.com', 'denyscoborges@gmail.com', 'admin'];
+
+            if (validAdmins.includes(email)) {
               if (password === 'Vendas@123') {
                 navigate('/admin');
               } else {
