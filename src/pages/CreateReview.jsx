@@ -1,3 +1,6 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, X, ChevronRight } from 'lucide-react';
 import { searchMovies } from '../services/tmdb';
 import { addReview } from '../services/storage';
 

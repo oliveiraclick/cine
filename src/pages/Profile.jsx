@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
 import { Settings, Share2, Crown, ChevronRight, Grid, Bookmark, ChevronLeft, LogOut, MessageSquare } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { getWatchlist, getUserReviews } from '../services/storage';
 
 const Profile = () => {
    const navigate = useNavigate();
+   const location = useLocation();
 
    const [activeTab, setActiveTab] = useState('assistidos');
+
+   React.useEffect(() => {
+      if (location.pathname === '/watchlist') {
+         setActiveTab('querover');
+      }
+   }, [location]);
+
    const [watchlist, setWatchlist] = useState([]);
    const [myReviews, setMyReviews] = useState([]);
 
